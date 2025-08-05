@@ -7,6 +7,7 @@ window.onload = function () {
   const manualModeRadio = document.querySelector("#manual-mode")
   const versionElement = document.querySelector("#version")
   const geminiApiKeyInput = document.querySelector("#gemini-api-key")
+  const geminiModelSelect = document.querySelector("#gemini-model")
   const saveApiKeyButton = document.querySelector("#save-api-key")
   const testApiKeyButton = document.querySelector("#test-api-key")
 
@@ -14,10 +15,15 @@ window.onload = function () {
     versionElement.innerHTML = `v${chrome.runtime.getManifest().version}`
   }
 
-  // Load Gemini API key
-  chrome.storage.sync.get(["geminiApiKey"], function (result) {
+  // Load Gemini API key and model
+  chrome.storage.sync.get(["geminiApiKey", "geminiModel"], function (result) {
     if (result.geminiApiKey && geminiApiKeyInput instanceof HTMLInputElement) {
       geminiApiKeyInput.value = result.geminiApiKey
+    }
+    if (result.geminiModel && geminiModelSelect instanceof HTMLSelectElement) {
+      geminiModelSelect.value = result.geminiModel
+    } else if (geminiModelSelect instanceof HTMLSelectElement) {
+      geminiModelSelect.value = "gemini-2.5-flash" // default
     }
   })
 
@@ -97,40 +103,45 @@ window.onload = function () {
     }
   })
 
-  // Save Gemini API key
-  if (saveApiKeyButton instanceof HTMLButtonElement && geminiApiKeyInput instanceof HTMLInputElement) {
+  // Save Gemini API key and model
+  if (saveApiKeyButton instanceof HTMLButtonElement && geminiApiKeyInput instanceof HTMLInputElement && geminiModelSelect instanceof HTMLSelectElement) {
     saveApiKeyButton.addEventListener("click", function () {
       const apiKey = geminiApiKeyInput.value.trim()
+      const model = geminiModelSelect.value
       if (apiKey) {
-        chrome.storage.sync.set({ geminiApiKey: apiKey }, function () {
+        chrome.storage.sync.set({ 
+          geminiApiKey: apiKey,
+          geminiModel: model 
+        }, function () {
           // Visual feedback
-          saveApiKeyButton.textContent = "Saved!"
+          saveApiKeyButton.textContent = "Salvo!"
           saveApiKeyButton.style.background = "#28a745"
           setTimeout(() => {
-            saveApiKeyButton.textContent = "Save Key"
+            saveApiKeyButton.textContent = "Salvar Configuração"
             saveApiKeyButton.style.background = "#2A9ACA"
           }, 2000)
         })
       } else {
-        alert("Please enter a valid API key")
+        alert("Por favor, insira uma chave de API válida")
       }
     })
   }
 
   // Test Gemini API key
-  if (testApiKeyButton instanceof HTMLButtonElement && geminiApiKeyInput instanceof HTMLInputElement) {
+  if (testApiKeyButton instanceof HTMLButtonElement && geminiApiKeyInput instanceof HTMLInputElement && geminiModelSelect instanceof HTMLSelectElement) {
     testApiKeyButton.addEventListener("click", async function () {
       const apiKey = geminiApiKeyInput.value.trim()
+      const model = geminiModelSelect.value
       if (!apiKey) {
-        alert("Please enter an API key first")
+        alert("Por favor, insira uma chave de API primeiro")
         return
       }
 
-      testApiKeyButton.textContent = "Testing..."
+      testApiKeyButton.textContent = "Testando..."
       testApiKeyButton.disabled = true
 
       try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -138,18 +149,18 @@ window.onload = function () {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: "Hello, this is a test message. Please respond with 'API key is working correctly.'"
+                text: "Olá, esta é uma mensagem de teste. Por favor, responda com 'Chave da API funcionando corretamente.'"
               }]
             }]
           })
         })
 
         if (response.ok) {
-          testApiKeyButton.textContent = "✓ Valid"
+          testApiKeyButton.textContent = "✓ Válida"
           testApiKeyButton.style.background = "#28a745"
           testApiKeyButton.style.color = "white"
           setTimeout(() => {
-            testApiKeyButton.textContent = "Test"
+            testApiKeyButton.textContent = "Testar"
             testApiKeyButton.style.background = "transparent"
             testApiKeyButton.style.color = "#2A9ACA"
           }, 3000)
@@ -157,11 +168,11 @@ window.onload = function () {
           throw new Error(`HTTP ${response.status}`)
         }
       } catch (error) {
-        testApiKeyButton.textContent = "✗ Invalid"
+        testApiKeyButton.textContent = "✗ Inválida"
         testApiKeyButton.style.background = "#dc3545"
         testApiKeyButton.style.color = "white"
         setTimeout(() => {
-          testApiKeyButton.textContent = "Test"
+          testApiKeyButton.textContent = "Testar"
           testApiKeyButton.style.background = "transparent"
           testApiKeyButton.style.color = "#2A9ACA"
         }, 3000)

@@ -1,8 +1,10 @@
 <!-- popup.html -->
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TranscripTonic</title>
   <style>
     @import url("https://fonts.googleapis.com/css2?family=SUSE:wght@400;700&display=swap");
@@ -138,7 +140,7 @@
         <div class="header-text">
           <h1>TranscripTonic</h1>
           <p class="header-description">
-            Simple Google Meet transcripts. Private and open source.
+            Transcrições simples do Google Meet. Privado e código aberto.
           </p>
         </div>
         <img class="logo" src="./icon.png" alt="Extension icon" />
@@ -148,52 +150,67 @@
     <div class="get-started">
       <div class="radio-item">
         <input type="radio" name="mode" id="auto-mode" />
-        <label for="auto-mode"><b>Auto mode</b>
-          <br /><span class="sub-text">Get transcripts of all meetings</span>
+        <label for="auto-mode"><b>Modo automático</b>
+          <br /><span class="sub-text">Obter transcrições de todas as reuniões</span>
         </label>
       </div>
       <div class="radio-item">
         <input type="radio" name="mode" id="manual-mode" />
-        <label for="manual-mode"><b>Manual mode</b> <br />
-          <span class="sub-text">Switch on transcript as needed using the CC icon in Google Meet</span>
+        <label for="manual-mode"><b>Modo manual</b> <br />
+          <span class="sub-text">Ativar transcrição conforme necessário usando o ícone CC no Google Meet</span>
         </label>
       </div>
       <hr class="divider" />
-      <p>In both modes, transcript will be downloaded as a text file at the end of each meeting. You can also <a
-          href="meetings.html" target="_blank"><b>set up webhooks</b></a> to integrate TranscripTonic with your
-        favourite tools.</p>
+      <p>Em ambos os modos, a transcrição será baixada como arquivo de texto no final de cada reunião. Você também pode <a
+          href="meetings.html" target="_blank"><b>configurar webhooks</b></a> para integrar o TranscripTonic com suas
+        ferramentas favoritas.</p>
     </div>
 
     <div class="get-started">
-      <h3 style="margin-top: 0; color: #2A9ACA;">🤖 AI Features</h3>
+      <h3 style="margin-top: 0; color: #2A9ACA;">🤖 Recursos de IA</h3>
       <div style="margin-bottom: 1rem;">
-        <label for="gemini-api-key" style="display: block; margin-bottom: 0.5rem;"><b>Gemini API Key</b></label>
-        <input type="password" id="gemini-api-key" placeholder="Enter your Gemini API key" 
+        <label for="gemini-api-key" style="display: block; margin-bottom: 0.5rem;"><b>Chave da API Gemini</b></label>
+        <input type="password" id="gemini-api-key" placeholder="Digite sua chave da API Gemini" 
                style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif;" />
-        <span class="sub-text" style="font-size: 0.85rem;">Required for AI-powered summaries and quick prompts</span>
+        <span class="sub-text" style="font-size: 0.85rem;">Necessário para resumos e prompts rápidos com IA</span>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <label for="gemini-model" style="display: block; margin-bottom: 0.5rem;"><b>Modelo Gemini</b></label>
+        <select id="gemini-model" style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif;">
+          <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recomendado)</option>
+          <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+          <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+          <option value="gemini-1.5-flash">Gemini 1.5 Flash (Legado)</option>
+          <option value="gemini-1.5-pro">Gemini 1.5 Pro (Legado)</option>
+        </select>
+        <div class="sub-text" style="font-size: 0.8rem; margin-top: 0.5rem;">
+          <strong>2.5 Flash:</strong> Melhor custo-benefício, recursos completos<br>
+          <strong>2.5 Pro:</strong> Máxima precisão e desempenho<br>
+          <strong>2.5 Flash-Lite:</strong> Otimizado para velocidade e baixo custo
+        </div>
       </div>
       <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
-        <button id="save-api-key" style="padding: 0.5rem 1rem; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none;">Save Key</button>
-        <button id="test-api-key" style="padding: 0.5rem 1rem; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer; text-decoration: none;">Test</button>
+        <button id="save-api-key" style="padding: 0.5rem 1rem; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none;">Salvar Configuração</button>
+        <button id="test-api-key" style="padding: 0.5rem 1rem; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer; text-decoration: none;">Testar</button>
       </div>
     </div>
 
     <div>
       <div class="footer">
-        <a href="./meetings.html" target="_blank">Last 10 meetings -></a>
+        <a href="./meetings.html" target="_blank">Últimas 10 reuniões -></a>
         <div>
-          <a href="https://github.com/vivek-nexus/transcriptonic#readme" target="_blank">Get help</a>
+          <a href="https://github.com/vivek-nexus/transcriptonic#readme" target="_blank">Obter ajuda</a>
           <span class="footer-separator">&#9679;</span>
-          <a href="https://github.com/vivek-nexus/transcriptonic/issues" target="_blank">Report a bug</a>
+          <a href="https://github.com/vivek-nexus/transcriptonic/issues" target="_blank">Reportar erro</a>
         </div>
       </div>
       <p class="footer-link">
         <span>
           <span id="version"></span> /
-          <a href="https://github.com/vivek-nexus/transcriptonic?tab=readme-ov-file#notice" target="_blank">Notice</a>
+          <a href="https://github.com/vivek-nexus/transcriptonic?tab=readme-ov-file#notice" target="_blank">Aviso</a>
         </span>
         <span>
-          Another project by <a href="https://vivek-nexus.github.io" target="_blank">Vivek</a>
+          Outro projeto por <a href="https://vivek-nexus.github.io" target="_blank">Vivek</a>
         </span>
       </p>
     </div>

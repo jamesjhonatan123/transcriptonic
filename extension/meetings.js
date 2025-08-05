@@ -468,11 +468,13 @@ async function executePrompt(prompt) {
     if (!aiResponseDiv) return
 
     // Check if API key is configured
-    chrome.storage.sync.get(["geminiApiKey"], async function(result) {
+    chrome.storage.sync.get(["geminiApiKey", "geminiModel"], async function(result) {
         if (!result.geminiApiKey) {
             aiResponseDiv.textContent = "Please configure your Gemini API key in the extension popup first."
             return
         }
+
+        const model = result.geminiModel || 'gemini-2.5-flash'
 
         try {
             aiResponseDiv.textContent = "Generating response..."
@@ -484,7 +486,7 @@ async function executePrompt(prompt) {
                 ? `Context: Current meeting transcript: ${meetingData.transcript}\n\nUser request: ${prompt}`
                 : prompt
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${result.geminiApiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${result.geminiApiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
