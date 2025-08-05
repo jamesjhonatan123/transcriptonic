@@ -87,6 +87,9 @@ function createAIAssistant() {
     
     // Create AI assistant panel
     createAIPanel()
+    
+    // Update transcript status periodically
+    setInterval(updateTranscriptStatus, 2000)
 }
 
 function createAIPanel() {
@@ -112,34 +115,38 @@ function createAIPanel() {
     
     aiAssistantPanel.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #2A9ACA;">AI Assistant</h3>
+            <h3 style="margin: 0; color: #2A9ACA;">Assistente IA</h3>
             <button id="close-ai-panel" style="background: none; border: none; color: #C0C0C0; font-size: 18px; cursor: pointer;">✕</button>
         </div>
         
+        <div id="transcript-status-indicator" style="background: rgba(42, 154, 202, 0.1); padding: 8px; border-radius: 4px; margin-bottom: 15px; font-size: 12px; font-weight: bold;">
+            ⏳ Aguardando transcrição...
+        </div>
+        
         <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Quick Actions:</label>
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Ações Rápidas:</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="ai-quick-btn" data-prompt="Generate 5 relevant questions about the topics discussed so far" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📝 Questions</button>
-                <button class="ai-quick-btn" data-prompt="Summarize the key points discussed in this meeting so far" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📋 Summary</button>
-                <button class="ai-quick-btn" data-prompt="List the action items and decisions made in this meeting" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">✅ Actions</button>
-                <button class="ai-quick-btn" data-prompt="Identify the main topics and themes discussed" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">🎯 Topics</button>
+                <button class="ai-quick-btn" data-prompt="Gere 5 perguntas relevantes sobre os tópicos discutidos até agora" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📝 Perguntas</button>
+                <button class="ai-quick-btn" data-prompt="Resuma os pontos principais discutidos nesta reunião até agora" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📋 Resumo</button>
+                <button class="ai-quick-btn" data-prompt="Liste os itens de ação e decisões tomadas nesta reunião" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">✅ Ações</button>
+                <button class="ai-quick-btn" data-prompt="Identifique os principais tópicos e temas discutidos" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">🎯 Tópicos</button>
             </div>
         </div>
         
         <div style="margin-bottom: 15px;">
-            <label for="custom-ai-prompt" style="display: block; margin-bottom: 8px; font-weight: bold;">Custom Prompt:</label>
-            <textarea id="custom-ai-prompt" placeholder="Ask anything about the meeting..." style="width: 100%; height: 60px; padding: 8px; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: inherit; resize: vertical;"></textarea>
-            <button id="execute-ai-prompt" style="margin-top: 8px; padding: 8px 16px; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Execute</button>
+            <label for="custom-ai-prompt" style="display: block; margin-bottom: 8px; font-weight: bold;">Prompt Personalizado:</label>
+            <textarea id="custom-ai-prompt" placeholder="Pergunte qualquer coisa sobre a reunião..." style="width: 100%; height: 60px; padding: 8px; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: inherit; resize: vertical;"></textarea>
+            <button id="execute-ai-prompt" style="margin-top: 8px; padding: 8px 16px; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Executar</button>
         </div>
         
         <div>
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Response:</label>
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Resposta:</label>
             <div id="ai-response-panel" style="min-height: 80px; max-height: 200px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid #a0a0a0; white-space: pre-wrap; font-size: 13px; overflow-y: auto;">
-                AI responses will appear here...
+                As respostas da IA aparecerão aqui...
             </div>
             <div style="display: flex; gap: 8px; margin-top: 8px;">
-                <button id="copy-ai-response" style="padding: 6px 12px; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer; font-size: 12px;">📋 Copy</button>
-                <button id="clear-ai-response" style="padding: 6px 12px; background: transparent; color: #a0a0a0; border: 1px solid #a0a0a0; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Clear</button>
+                <button id="copy-ai-response" style="padding: 6px 12px; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer; font-size: 12px;">📋 Copiar</button>
+                <button id="clear-ai-response" style="padding: 6px 12px; background: transparent; color: #a0a0a0; border: 1px solid #a0a0a0; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Limpar</button>
             </div>
         </div>
     `
@@ -175,13 +182,13 @@ function setupAIPanelListeners() {
     // Copy response
     document.getElementById('copy-ai-response')?.addEventListener('click', () => {
         const responseText = document.getElementById('ai-response-panel')?.textContent
-        if (responseText && responseText !== 'AI responses will appear here...') {
+        if (responseText && responseText !== 'As respostas da IA aparecerão aqui...') {
             navigator.clipboard.writeText(responseText)
             const btn = document.getElementById('copy-ai-response')
             if (btn) {
-                btn.textContent = '✓ Copied!'
+                btn.textContent = '✓ Copiado!'
                 setTimeout(() => {
-                    btn.textContent = '📋 Copy'
+                    btn.textContent = '📋 Copiar'
                 }, 2000)
             }
         }
@@ -191,7 +198,7 @@ function setupAIPanelListeners() {
     document.getElementById('clear-ai-response')?.addEventListener('click', () => {
         const responseDiv = document.getElementById('ai-response-panel')
         if (responseDiv) {
-            responseDiv.textContent = 'AI responses will appear here...'
+            responseDiv.textContent = 'As respostas da IA aparecerão aqui...'
         }
         const customPrompt = document.getElementById('custom-ai-prompt')
         if (customPrompt) {
@@ -203,7 +210,43 @@ function setupAIPanelListeners() {
 function toggleAIPanel() {
     if (aiAssistantPanel) {
         aiAssistantPanel.style.display = aiAssistantPanel.style.display === 'none' ? 'block' : 'none'
+        // Update status when panel is opened
+        if (aiAssistantPanel.style.display === 'block') {
+            updateTranscriptStatus()
+        }
     }
+}
+
+function updateTranscriptStatus() {
+    const statusDiv = document.getElementById('transcript-status-indicator')
+    if (!statusDiv) return
+    
+    const transcriptLength = transcript.length
+    const isActiveTranscript = transcriptTextBuffer.length > 0
+    const lastActivity = transcriptLength > 0 ? new Date(transcript[transcript.length - 1].timestamp) : null
+    
+    let statusMessage = ''
+    let statusColor = '#a0a0a0'
+    
+    if (isActiveTranscript) {
+        statusMessage = `🟢 Transcrevendo ao vivo... (${transcriptLength} blocos)`
+        statusColor = '#28a745'
+    } else if (transcriptLength > 0) {
+        const timeSinceLastActivity = lastActivity ? Math.floor((Date.now() - lastActivity.getTime()) / 1000) : 0
+        if (timeSinceLastActivity < 30) {
+            statusMessage = `🟡 Transcrição pausada (${transcriptLength} blocos)`
+            statusColor = '#ffc107'
+        } else {
+            statusMessage = `📝 ${transcriptLength} blocos capturados`
+            statusColor = '#2A9ACA'
+        }
+    } else {
+        statusMessage = '⏳ Aguardando transcrição...'
+        statusColor = '#a0a0a0'
+    }
+    
+    statusDiv.innerHTML = statusMessage
+    statusDiv.style.color = statusColor
 }
 
 async function executeAIPromptInMeeting(prompt) {
@@ -213,23 +256,38 @@ async function executeAIPromptInMeeting(prompt) {
     if (!responseDiv) return
     
     // Get API key from storage
-    chrome.storage.sync.get(['geminiApiKey'], async function(result) {
+    chrome.storage.sync.get(['geminiApiKey', 'geminiModel'], async function(result) {
         if (!result.geminiApiKey) {
-            responseDiv.textContent = 'Please configure your Gemini API key in the extension popup first.'
+            responseDiv.textContent = 'Por favor, configure sua chave da API Gemini no popup da extensão primeiro.'
             return
         }
         
+        const model = result.geminiModel || 'gemini-2.5-flash'
+        
         try {
-            responseDiv.textContent = 'Generating response...'
+            responseDiv.textContent = 'Gerando resposta...'
             if (executeBtn) executeBtn.disabled = true
             
             // Get current meeting context
             const currentTranscript = transcript.map(t => `${t.personName}: ${t.transcriptText}`).join('\n')
-            const contextualPrompt = currentTranscript 
-                ? `Context: Current meeting transcript:\n${currentTranscript}\n\nUser request: ${prompt}`
-                : prompt
             
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${result.geminiApiKey}`, {
+            // Show context status to user
+            const contextStatus = currentTranscript 
+                ? `📝 Contexto disponível: ${transcript.length} blocos de transcrição`
+                : '⚠️ Nenhuma transcrição disponível ainda'
+            
+            responseDiv.innerHTML = `
+                <div style="background: rgba(42, 154, 202, 0.1); padding: 8px; border-radius: 4px; margin-bottom: 8px; font-size: 12px;">
+                    ${contextStatus}
+                </div>
+                <div>Gerando resposta...</div>
+            `
+            
+            const contextualPrompt = currentTranscript 
+                ? `Contexto: Transcrição atual da reunião:\n${currentTranscript}\n\nSolicitação do usuário: ${prompt}`
+                : `Solicitação do usuário: ${prompt}\n\nNota: Ainda não há transcrição disponível para esta reunião.`
+            
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${result.geminiApiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -248,12 +306,19 @@ async function executeAIPromptInMeeting(prompt) {
             }
             
             const data = await response.json()
-            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated'
-            responseDiv.textContent = aiResponse
+            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nenhuma resposta gerada'
+            
+            // Show context status and response
+            responseDiv.innerHTML = `
+                <div style="background: rgba(42, 154, 202, 0.1); padding: 8px; border-radius: 4px; margin-bottom: 8px; font-size: 12px;">
+                    ${contextStatus}
+                </div>
+                <div style="white-space: pre-wrap;">${aiResponse}</div>
+            `
             
         } catch (error) {
-            console.error('AI request failed:', error)
-            responseDiv.textContent = `Error: ${error.message}`
+            console.error('Falha na requisição AI:', error)
+            responseDiv.textContent = `Erro: ${error.message}`
         } finally {
             if (executeBtn) executeBtn.disabled = false
         }
@@ -371,9 +436,18 @@ function meetingRoutines(uiType) {
     //*********** MEETING START ROUTINES **********//
     // Initialize AI Assistant if API key configured
     chrome.storage.sync.get(['geminiApiKey'], function(result) {
-      if (result.geminiApiKey) {
-        createAIAssistant()
-      }
+      createAIAssistant()
+      // Show initial status based on API key availability
+      setTimeout(() => {
+        if (!result.geminiApiKey) {
+          const statusDiv = document.getElementById('transcript-status-indicator')
+          if (statusDiv) {
+            statusDiv.innerHTML = '🔑 Configure sua chave da API Gemini no popup da extensão para usar recursos de IA'
+            statusDiv.style.color = '#ffc107'
+            statusDiv.style.background = 'rgba(255, 193, 7, 0.1)'
+          }
+        }
+      }, 1000)
     })
     // Update title (delayed to allow Meet to set it)
     setTimeout(() => updateMeetingTitle(), 5000)
@@ -687,6 +761,11 @@ function pushBufferToTranscript() {
     "transcriptText": transcriptTextBuffer
   })
   overWriteChromeStorage(["transcript"], false)
+  
+  // Update AI panel status if it exists
+  if (aiAssistantPanel) {
+    updateTranscriptStatus()
+  }
 }
 
 // Pushes object to array only if it doesn't already exist. chatMessage is checked for substring since some trailing text(keep Pin message) is present from a button that allows to pin the message.
