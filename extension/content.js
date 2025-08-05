@@ -229,7 +229,7 @@ async function executeAIPromptInMeeting(prompt) {
                 ? `Context: Current meeting transcript:\n${currentTranscript}\n\nUser request: ${prompt}`
                 : prompt
             
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${result.geminiApiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${result.geminiApiKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
