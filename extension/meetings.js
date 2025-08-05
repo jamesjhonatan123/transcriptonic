@@ -293,3 +293,302 @@ function getDuration(meetingStartTimestamp, meetingEndTimestamp) {
         ? `${durationHours}h ${remainingMinutes}m`
         : `${durationMinutes}m`
 }
+
+// AI Features functionality
+document.addEventListener("DOMContentLoaded", function() {
+    initializeAIFeatures()
+})
+
+function initializeAIFeatures() {
+    const saveTemplateBtn = document.querySelector("#save-template")
+    const templateNameInput = document.querySelector("#template-name")
+    const templateContentInput = document.querySelector("#template-content")
+    const quickPromptBtns = document.querySelectorAll(".quick-prompt-btn")
+    const executeCustomPromptBtn = document.querySelector("#execute-custom-prompt")
+    const customPromptInput = document.querySelector("#custom-prompt")
+    const aiResponseDiv = document.querySelector("#ai-response")
+    const copyResponseBtn = document.querySelector("#copy-response")
+    const generatePdfBtn = document.querySelector("#generate-pdf")
+
+    // Load existing templates
+    loadTemplates()
+
+    // Save template functionality
+    if (saveTemplateBtn && templateNameInput && templateContentInput) {
+        saveTemplateBtn.addEventListener("click", function() {
+            const name = templateNameInput.value.trim()
+            const content = templateContentInput.value.trim()
+            
+            if (!name || !content) {
+                alert("Please fill in both template name and content")
+                return
+            }
+
+            chrome.storage.sync.get(["aiTemplates"], function(result) {
+                const templates = result.aiTemplates || []
+                const newTemplate = {
+                    id: Date.now().toString(),
+                    name: name,
+                    content: content,
+                    createdAt: new Date().toISOString()
+                }
+                
+                templates.push(newTemplate)
+                chrome.storage.sync.set({ aiTemplates: templates }, function() {
+                    templateNameInput.value = ""
+                    templateContentInput.value = ""
+                    loadTemplates()
+                    alert("Template saved successfully!")
+                })
+            })
+        })
+    }
+
+    // Quick prompts functionality
+    quickPromptBtns.forEach(btn => {
+        btn.addEventListener("click", function() {
+            const prompt = this.dataset.prompt
+            executePrompt(prompt)
+        })
+    })
+
+    // Custom prompt functionality
+    if (executeCustomPromptBtn && customPromptInput) {
+        executeCustomPromptBtn.addEventListener("click", function() {
+            const prompt = customPromptInput.value.trim()
+            if (!prompt) {
+                alert("Please enter a custom prompt")
+                return
+            }
+            executePrompt(prompt)
+        })
+    }
+
+    // Copy response functionality
+    if (copyResponseBtn && aiResponseDiv) {
+        copyResponseBtn.addEventListener("click", function() {
+            const text = aiResponseDiv.textContent
+            if (text && text !== "AI responses will appear here...") {
+                navigator.clipboard.writeText(text).then(() => {
+                    copyResponseBtn.textContent = "✓ Copied!"
+                    setTimeout(() => {
+                        copyResponseBtn.textContent = "📋 Copy"
+                    }, 2000)
+                })
+            }
+        })
+    }
+
+    // Generate PDF functionality
+    if (generatePdfBtn && aiResponseDiv) {
+        generatePdfBtn.addEventListener("click", function() {
+            const content = aiResponseDiv.textContent
+            if (content && content !== "AI responses will appear here...") {
+                generatePDF(content)
+            } else {
+                alert("No AI response to generate PDF from")
+            }
+        })
+    }
+}
+
+function loadTemplates() {
+    chrome.storage.sync.get(["aiTemplates"], function(result) {
+        const templates = result.aiTemplates || []
+        const templatesList = document.querySelector("#templates-list")
+        
+        if (!templatesList) return
+
+        if (templates.length === 0) {
+            templatesList.innerHTML = '<p class="sub-text">No templates saved yet</p>'
+            return
+        }
+
+        templatesList.innerHTML = templates.map(template => `
+            <div class="template-item">
+                <div>
+                    <strong>${escapeHtml(template.name)}</strong>
+                    <br>
+                    <span class="sub-text">Created ${new Date(template.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div class="template-actions">
+                    <button onclick="useTemplate('${template.id}')" style="background: #2A9ACA; color: white; border: none;">Use</button>
+                    <button onclick="deleteTemplate('${template.id}')" style="background: #dc3545; color: white; border: none;">Delete</button>
+                </div>
+            </div>
+        `).join('')
+    })
+}
+
+function useTemplate(templateId) {
+    chrome.storage.sync.get(["aiTemplates"], function(result) {
+        const templates = result.aiTemplates || []
+        const template = templates.find(t => t.id === templateId)
+        
+        if (template) {
+            // Get current meeting data to populate template
+            getCurrentMeetingData().then(meetingData => {
+                if (meetingData) {
+                    const prompt = `Using this template: ${template.content}
+                    
+                    Please generate a summary using the following meeting data:
+                    Meeting Title: ${meetingData.title}
+                    Date: ${meetingData.date}
+                    Participants: ${meetingData.participants}
+                    Transcript: ${meetingData.transcript}
+                    
+                    Replace the placeholders {{summary}}, {{date}}, {{participants}} with appropriate content.`
+                    
+                    executePrompt(prompt)
+                } else {
+                    alert("No active meeting found. Templates work best during or right after a meeting.")
+                }
+            })
+        }
+    })
+}
+
+function deleteTemplate(templateId) {
+    if (confirm("Are you sure you want to delete this template?")) {
+        chrome.storage.sync.get(["aiTemplates"], function(result) {
+            const templates = result.aiTemplates || []
+            const updatedTemplates = templates.filter(t => t.id !== templateId)
+            
+            chrome.storage.sync.set({ aiTemplates: updatedTemplates }, function() {
+                loadTemplates()
+            })
+        })
+    }
+}
+
+async function executePrompt(prompt) {
+    const aiResponseDiv = document.querySelector("#ai-response")
+    const executeBtn = document.querySelector("#execute-custom-prompt")
+    
+    if (!aiResponseDiv) return
+
+    // Check if API key is configured
+    chrome.storage.sync.get(["geminiApiKey"], async function(result) {
+        if (!result.geminiApiKey) {
+            aiResponseDiv.textContent = "Please configure your Gemini API key in the extension popup first."
+            return
+        }
+
+        try {
+            aiResponseDiv.textContent = "Generating response..."
+            if (executeBtn) executeBtn.disabled = true
+
+            // Get current meeting transcript for context
+            const meetingData = await getCurrentMeetingData()
+            const contextualPrompt = meetingData 
+                ? `Context: Current meeting transcript: ${meetingData.transcript}\n\nUser request: ${prompt}`
+                : prompt
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${result.geminiApiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: contextualPrompt
+                        }]
+                    }]
+                })
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+            }
+
+            const data = await response.json()
+            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response generated"
+            aiResponseDiv.textContent = aiResponse
+
+        } catch (error) {
+            console.error("AI request failed:", error)
+            aiResponseDiv.textContent = `Error: ${error.message}`
+        } finally {
+            if (executeBtn) executeBtn.disabled = false
+        }
+    })
+}
+
+async function getCurrentMeetingData() {
+    return new Promise((resolve) => {
+        // Try to get current meeting data from the extension
+        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+            const currentTab = tabs[0]
+            if (currentTab && currentTab.url && currentTab.url.includes('meet.google.com')) {
+                // Get the latest meeting data
+                chrome.storage.local.get(null, function(items) {
+                    const meetings = Object.keys(items)
+                        .filter(key => key.startsWith('meeting_'))
+                        .map(key => items[key])
+                        .sort((a, b) => new Date(b.meetingStartTimestamp) - new Date(a.meetingStartTimestamp))
+                    
+                    if (meetings.length > 0) {
+                        const latestMeeting = meetings[0]
+                        resolve({
+                            title: latestMeeting.meetingTitle || "Current Meeting",
+                            date: new Date().toLocaleDateString(),
+                            participants: latestMeeting.transcript ? 
+                                [...new Set(latestMeeting.transcript.map(t => t.personName))].join(", ") : 
+                                "Unknown",
+                            transcript: latestMeeting.transcript ? 
+                                latestMeeting.transcript.map(t => `${t.personName}: ${t.transcriptText}`).join("\n") :
+                                "No transcript available"
+                        })
+                    } else {
+                        resolve(null)
+                    }
+                })
+            } else {
+                resolve(null)
+            }
+        })
+    })
+}
+
+function generatePDF(content) {
+    // Create a simple HTML document for PDF generation
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Meeting Summary - TranscripTonic</title>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                h1 { color: #2A9ACA; }
+                .header { border-bottom: 2px solid #2A9ACA; padding-bottom: 10px; margin-bottom: 20px; }
+                .content { white-space: pre-wrap; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>Meeting Summary</h1>
+                <p>Generated by TranscripTonic on ${new Date().toLocaleDateString()}</p>
+            </div>
+            <div class="content">${escapeHtml(content)}</div>
+        </body>
+        </html>
+    `
+
+    // Create a blob and download it
+    const blob = new Blob([htmlContent], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `meeting-summary-${new Date().toISOString().split('T')[0]}.html`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
+}

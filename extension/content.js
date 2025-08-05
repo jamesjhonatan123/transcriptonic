@@ -48,6 +48,223 @@ let extensionStatusJSON
 let canUseAriaBasedTranscriptSelector = true
 
 
+//*********** AI ASSISTANT INTEGRATION **********//
+let aiAssistantButton = null
+let aiAssistantPanel = null
+
+function createAIAssistant() {
+    // Create floating AI assistant button
+    aiAssistantButton = document.createElement('div')
+    aiAssistantButton.id = 'transcriptonic-ai-assistant'
+    aiAssistantButton.innerHTML = '🤖'
+    aiAssistantButton.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: #2A9ACA;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(42, 154, 202, 0.3);
+        transition: all 0.3s ease;
+    `
+    
+    aiAssistantButton.addEventListener('click', toggleAIPanel)
+    aiAssistantButton.addEventListener('mouseenter', () => {
+        aiAssistantButton.style.transform = 'scale(1.1)'
+    })
+    aiAssistantButton.addEventListener('mouseleave', () => {
+        aiAssistantButton.style.transform = 'scale(1)'
+    })
+    
+    document.body.appendChild(aiAssistantButton)
+    
+    // Create AI assistant panel
+    createAIPanel()
+}
+
+function createAIPanel() {
+    aiAssistantPanel = document.createElement('div')
+    aiAssistantPanel.id = 'transcriptonic-ai-panel'
+    aiAssistantPanel.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        width: 350px;
+        max-height: 500px;
+        background: #071f29;
+        border: 1px solid #2A9ACA;
+        border-radius: 12px;
+        padding: 20px;
+        z-index: 10001;
+        display: none;
+        overflow-y: auto;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        font-family: "SUSE", sans-serif;
+        color: #C0C0C0;
+    `
+    
+    aiAssistantPanel.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #2A9ACA;">AI Assistant</h3>
+            <button id="close-ai-panel" style="background: none; border: none; color: #C0C0C0; font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Quick Actions:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="ai-quick-btn" data-prompt="Generate 5 relevant questions about the topics discussed so far" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📝 Questions</button>
+                <button class="ai-quick-btn" data-prompt="Summarize the key points discussed in this meeting so far" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📋 Summary</button>
+                <button class="ai-quick-btn" data-prompt="List the action items and decisions made in this meeting" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">✅ Actions</button>
+                <button class="ai-quick-btn" data-prompt="Identify the main topics and themes discussed" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">🎯 Topics</button>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="custom-ai-prompt" style="display: block; margin-bottom: 8px; font-weight: bold;">Custom Prompt:</label>
+            <textarea id="custom-ai-prompt" placeholder="Ask anything about the meeting..." style="width: 100%; height: 60px; padding: 8px; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: inherit; resize: vertical;"></textarea>
+            <button id="execute-ai-prompt" style="margin-top: 8px; padding: 8px 16px; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Execute</button>
+        </div>
+        
+        <div>
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Response:</label>
+            <div id="ai-response-panel" style="min-height: 80px; max-height: 200px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid #a0a0a0; white-space: pre-wrap; font-size: 13px; overflow-y: auto;">
+                AI responses will appear here...
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button id="copy-ai-response" style="padding: 6px 12px; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer; font-size: 12px;">📋 Copy</button>
+                <button id="clear-ai-response" style="padding: 6px 12px; background: transparent; color: #a0a0a0; border: 1px solid #a0a0a0; border-radius: 4px; cursor: pointer; font-size: 12px;">🗑️ Clear</button>
+            </div>
+        </div>
+    `
+    
+    document.body.appendChild(aiAssistantPanel)
+    
+    // Add event listeners
+    setupAIPanelListeners()
+}
+
+function setupAIPanelListeners() {
+    // Close panel
+    document.getElementById('close-ai-panel')?.addEventListener('click', () => {
+        aiAssistantPanel.style.display = 'none'
+    })
+    
+    // Quick prompt buttons
+    document.querySelectorAll('.ai-quick-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const prompt = this.dataset.prompt
+            executeAIPromptInMeeting(prompt)
+        })
+    })
+    
+    // Custom prompt execution
+    document.getElementById('execute-ai-prompt')?.addEventListener('click', () => {
+        const customPrompt = document.getElementById('custom-ai-prompt')?.value.trim()
+        if (customPrompt) {
+            executeAIPromptInMeeting(customPrompt)
+        }
+    })
+    
+    // Copy response
+    document.getElementById('copy-ai-response')?.addEventListener('click', () => {
+        const responseText = document.getElementById('ai-response-panel')?.textContent
+        if (responseText && responseText !== 'AI responses will appear here...') {
+            navigator.clipboard.writeText(responseText)
+            const btn = document.getElementById('copy-ai-response')
+            if (btn) {
+                btn.textContent = '✓ Copied!'
+                setTimeout(() => {
+                    btn.textContent = '📋 Copy'
+                }, 2000)
+            }
+        }
+    })
+    
+    // Clear response
+    document.getElementById('clear-ai-response')?.addEventListener('click', () => {
+        const responseDiv = document.getElementById('ai-response-panel')
+        if (responseDiv) {
+            responseDiv.textContent = 'AI responses will appear here...'
+        }
+        const customPrompt = document.getElementById('custom-ai-prompt')
+        if (customPrompt) {
+            customPrompt.value = ''
+        }
+    })
+}
+
+function toggleAIPanel() {
+    if (aiAssistantPanel) {
+        aiAssistantPanel.style.display = aiAssistantPanel.style.display === 'none' ? 'block' : 'none'
+    }
+}
+
+async function executeAIPromptInMeeting(prompt) {
+    const responseDiv = document.getElementById('ai-response-panel')
+    const executeBtn = document.getElementById('execute-ai-prompt')
+    
+    if (!responseDiv) return
+    
+    // Get API key from storage
+    chrome.storage.sync.get(['geminiApiKey'], async function(result) {
+        if (!result.geminiApiKey) {
+            responseDiv.textContent = 'Please configure your Gemini API key in the extension popup first.'
+            return
+        }
+        
+        try {
+            responseDiv.textContent = 'Generating response...'
+            if (executeBtn) executeBtn.disabled = true
+            
+            // Get current meeting context
+            const currentTranscript = transcript.map(t => `${t.personName}: ${t.transcriptText}`).join('\n')
+            const contextualPrompt = currentTranscript 
+                ? `Context: Current meeting transcript:\n${currentTranscript}\n\nUser request: ${prompt}`
+                : prompt
+            
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${result.geminiApiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: contextualPrompt
+                        }]
+                    }]
+                })
+            })
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+            }
+            
+            const data = await response.json()
+            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response generated'
+            responseDiv.textContent = aiResponse
+            
+        } catch (error) {
+            console.error('AI request failed:', error)
+            responseDiv.textContent = `Error: ${error.message}`
+        } finally {
+            if (executeBtn) executeBtn.disabled = false
+        }
+    })
+}
+
+
+
+
+
+
 
 
 
@@ -152,6 +369,13 @@ function meetingRoutines(uiType) {
 
 
     //*********** MEETING START ROUTINES **********//
+    // Initialize AI Assistant
+    chrome.storage.sync.get(['geminiApiKey'], function(result) {
+      if (result.geminiApiKey) {
+        createAIAssistant()
+      }
+    })
+    
     // Pick up meeting name after a delay, since Google meet updates meeting name after a delay
     setTimeout(() => updateMeetingTitle(), 5000)
 
