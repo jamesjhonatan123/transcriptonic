@@ -8,21 +8,19 @@
     @import url("https://fonts.googleapis.com/css2?family=SUSE:wght@400;700&display=swap");
 
     body {
-      width: 540px;
-      padding: 1.5rem;
+      width: 600px;
+      height: 500px;
+      padding: 0;
       background: #071f29;
       color: #C0C0C0;
       font-family: "SUSE", sans-serif;
       font-size: 1rem;
-    }
-
-    h1 {
-      font-size: 2rem;
       margin: 0;
     }
 
     .header {
-      margin-bottom: 2rem;
+      padding: 1.5rem;
+      border-bottom: 1px solid #2a9aca33;
     }
 
     .header-content {
@@ -31,37 +29,91 @@
       justify-content: space-between;
     }
 
-    .header-text {
+    .header-text h1 {
+      font-size: 1.8rem;
+      margin: 0;
       color: #2A9ACA;
     }
 
     .header-description {
       margin: 0;
+      font-size: 0.9rem;
+      color: #a0a0a0;
     }
 
     .logo {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       border-radius: 96px;
     }
 
-    .get-started {
+    /* Tab System */
+    .tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid #2a9aca33;
+    }
+
+    .tab-button {
+      flex: 1;
       padding: 1rem;
-      background-color: rgba(255, 255, 255, 0.1);
+      background: transparent;
+      border: none;
+      color: #a0a0a0;
+      cursor: pointer;
+      font-family: "SUSE", sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+      color: #2A9ACA;
+      background: rgba(42, 154, 202, 0.1);
+      border-bottom: 2px solid #2A9ACA;
+    }
+
+    .tab-button:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.05);
+      color: #C0C0C0;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 1.5rem;
+      height: calc(500px - 120px);
+      overflow-y: auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #a0a0a0;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2A9ACA;
+    }
+
+    /* Common styles */
+    .section {
+      background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(4px);
       border-radius: 8px;
-      margin-bottom: 1.5rem;
-      text-align: left;
-    }
-
-    ul {
-      padding-inline-start: 20px;
-      font-size: 1rem;
-    }
-
-    p {
-      font-size: 1rem;
-      margin-bottom: 0;
+      padding: 1rem;
+      margin-bottom: 1rem;
     }
 
     .radio-item {
@@ -73,9 +125,10 @@
 
     .sub-text {
       color: #a0a0a0;
+      font-size: 0.85rem;
     }
 
-    input {
+    input[type="radio"] {
       margin-top: 0.25rem;
       accent-color: #2A9ACA;
       width: 18px;
@@ -83,119 +136,291 @@
       cursor: pointer;
     }
 
+    input[type="text"], input[type="password"], textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #a0a0a0;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+      color: #C0C0C0;
+      font-family: 'SUSE', sans-serif;
+      box-sizing: border-box;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+      outline: none;
+      border-color: #2A9ACA;
+      box-shadow: 0 0 0 2px rgba(42, 154, 202, 0.2);
+    }
+
     label {
-      margin: 0;
-      margin-bottom: 0.25rem;
-      font-size: 1rem;
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
       cursor: pointer;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background: #2A9ACA;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: "SUSE", sans-serif;
+      font-weight: 500;
+      transition: background 0.3s ease;
+    }
+
+    button:hover:not(:disabled) {
+      background: #238bb5;
+    }
+
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: #2A9ACA;
+      border: 1px solid #2A9ACA;
+    }
+
+    button.secondary:hover:not(:disabled) {
+      background: rgba(42, 154, 202, 0.1);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .template-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #a0a0a0;
+      border-radius: 4px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .template-name {
+      font-weight: 500;
+      color: #C0C0C0;
+    }
+
+    .template-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .template-actions button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .ai-response {
+      min-height: 100px;
+      max-height: 200px;
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      border: 1px solid #a0a0a0;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 0.85rem;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+    }
+
+    .quick-prompts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .quick-prompt-btn {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+      text-align: left;
     }
 
     a {
       color: #2A9ACA;
-      font-weight: bold;
-      text-underline-offset: 4px;
-    }
-
-    button {
-      color: #2A9ACA;
-      font-weight: bold;
-      font-size: 1rem;
       text-decoration: underline;
-      text-underline-offset: 4px;
-      font-family: "SUSE", sans-serif;
-      background: transparent;
-      border: none;
-      cursor: pointer;
+      text-underline-offset: 2px;
     }
 
-    .divider {
-      border-color: #a0a0a0;
+    a:hover {
+      color: #238bb5;
     }
 
-    .footer {
-      margin-bottom: 2.75rem;
-      display: flex;
-      gap: 1.5rem;
-      justify-content: space-between;
+    .footer-links {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #2a9aca33;
+      font-size: 0.8rem;
+      text-align: center;
+      color: #a0a0a0;
     }
 
-    .footer-link {
-      font-size: small;
-      display: flex;
-      justify-content: space-between;
+    .status-message {
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
     }
 
-    .footer-separator {
-      margin: 0 0.5rem;
+    .status-success {
+      background: rgba(40, 167, 69, 0.2);
+      color: #28a745;
+      border: 1px solid #28a745;
+    }
+
+    .status-error {
+      background: rgba(220, 53, 69, 0.2);
+      color: #dc3545;
+      border: 1px solid #dc3545;
     }
   </style>
 </head>
 
 <body>
-  <div>
-    <div class="header">
-      <div class="header-content">
-        <div class="header-text">
-          <h1>TranscripTonic</h1>
-          <p class="header-description">
-            Simple Google Meet transcripts. Private and open source.
-          </p>
-        </div>
-        <img class="logo" src="./icon.png" alt="Extension icon" />
+  <div class="header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>TranscripTonic</h1>
+        <p class="header-description">
+          Simple Google Meet transcripts. Private and open source.
+        </p>
       </div>
+      <img class="logo" src="./icon.png" alt="Extension icon" />
     </div>
+  </div>
 
-    <div class="get-started">
+  <div class="tabs">
+    <button class="tab-button active" data-tab="settings">⚙️ Configurações</button>
+    <button class="tab-button" data-tab="templates">📄 Templates</button>
+    <button class="tab-button" data-tab="ai">🤖 IA</button>
+  </div>
+
+  <!-- Settings Tab -->
+  <div id="settings-tab" class="tab-content active">
+    <div class="section">
+      <h3 style="margin-top: 0; color: #2A9ACA;">Modo de Operação</h3>
       <div class="radio-item">
         <input type="radio" name="mode" id="auto-mode" />
-        <label for="auto-mode"><b>Auto mode</b>
-          <br /><span class="sub-text">Get transcripts of all meetings</span>
+        <label for="auto-mode"><b>Modo Automático</b>
+          <br /><span class="sub-text">Obtém transcrições de todas as reuniões</span>
         </label>
       </div>
       <div class="radio-item">
         <input type="radio" name="mode" id="manual-mode" />
-        <label for="manual-mode"><b>Manual mode</b> <br />
-          <span class="sub-text">Switch on transcript as needed using the CC icon in Google Meet</span>
+        <label for="manual-mode"><b>Modo Manual</b> <br />
+          <span class="sub-text">Ative a transcrição conforme necessário usando o ícone CC no Google Meet</span>
         </label>
       </div>
-      <hr class="divider" />
-      <p>In both modes, transcript will be downloaded as a text file at the end of each meeting. You can also <a
-          href="meetings.html" target="_blank"><b>set up webhooks</b></a> to integrate TranscripTonic with your
-        favourite tools.</p>
     </div>
 
-    <div class="get-started">
-      <h3 style="margin-top: 0; color: #2A9ACA;">🤖 AI Features</h3>
+    <div class="section">
+      <h3 style="margin-top: 0; color: #2A9ACA;">🤖 Configuração da IA</h3>
       <div style="margin-bottom: 1rem;">
-        <label for="gemini-api-key" style="display: block; margin-bottom: 0.5rem;"><b>Gemini API Key</b></label>
-        <input type="password" id="gemini-api-key" placeholder="Enter your Gemini API key" 
-               style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif;" />
-        <span class="sub-text" style="font-size: 0.85rem;">Required for AI-powered summaries and quick prompts</span>
+        <label for="gemini-api-key"><b>Chave API do Gemini</b></label>
+        <input type="password" id="gemini-api-key" placeholder="Cole sua chave API do Gemini aqui" />
+        <span class="sub-text">Necessária para recursos de IA. <a href="https://makersuite.google.com/app/apikey" target="_blank">Obter chave API</a></span>
       </div>
-      <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
-        <button id="save-api-key" style="padding: 0.5rem 1rem; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none;">Save Key</button>
-        <button id="test-api-key" style="padding: 0.5rem 1rem; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer; text-decoration: none;">Test</button>
+      <div class="button-group">
+        <button id="save-api-key">Salvar Chave</button>
+        <button id="test-api-key" class="secondary">Testar</button>
+      </div>
+      <div id="api-status"></div>
+    </div>
+
+    <div class="footer-links">
+      <div>
+        <a href="./meetings.html" target="_blank">Últimas 10 reuniões</a> • 
+        <a href="https://github.com/vivek-nexus/transcriptonic#readme" target="_blank">Ajuda</a> • 
+        <a href="https://github.com/vivek-nexus/transcriptonic/issues" target="_blank">Reportar bug</a>
+      </div>
+      <div style="margin-top: 0.5rem;">
+        <span id="version"></span> • Projeto de <a href="https://vivek-nexus.github.io" target="_blank">Vivek</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates Tab -->
+  <div id="templates-tab" class="tab-content">
+    <div class="section">
+      <h3 style="margin-top: 0; color: #2A9ACA;">Criar Novo Template</h3>
+      <div style="margin-bottom: 1rem;">
+        <label for="template-name">Nome do Template</label>
+        <input type="text" id="template-name" placeholder="ex: Resumo Executivo" />
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <label for="template-content">Conteúdo HTML do Template</label>
+        <textarea id="template-content" rows="6" placeholder="Digite seu template HTML aqui. Use {{summary}}, {{date}}, {{participants}} como placeholders.
+
+Exemplo:
+<h1>Resumo da Reunião</h1>
+<p><strong>Data:</strong> {{date}}</p>
+<p><strong>Participantes:</strong> {{participants}}</p>
+<div>{{summary}}</div>"></textarea>
+      </div>
+      <button id="save-template">Salvar Template</button>
+      <div id="template-status"></div>
+    </div>
+
+    <div class="section">
+      <h3 style="margin-top: 0; color: #2A9ACA;">Templates Salvos</h3>
+      <div id="templates-list">
+        <!-- Templates serão carregados aqui -->
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Tab -->
+  <div id="ai-tab" class="tab-content">
+    <div class="section">
+      <h3 style="margin-top: 0; color: #2A9ACA;">⚡ Prompts Rápidos</h3>
+      <div class="quick-prompts">
+        <button class="quick-prompt-btn" data-prompt="Gere 5 perguntas relevantes sobre os tópicos discutidos até agora">
+          📝 Gerar Perguntas
+        </button>
+        <button class="quick-prompt-btn" data-prompt="Resuma os pontos principais discutidos nesta reunião até agora">
+          📋 Resumir
+        </button>
+        <button class="quick-prompt-btn" data-prompt="Liste os itens de ação e decisões tomadas nesta reunião">
+          ✅ Itens de Ação
+        </button>
+        <button class="quick-prompt-btn" data-prompt="Identifique os principais tópicos e temas discutidos">
+          🎯 Tópicos Principais
+        </button>
       </div>
     </div>
 
-    <div>
-      <div class="footer">
-        <a href="./meetings.html" target="_blank">Last 10 meetings -></a>
-        <div>
-          <a href="https://github.com/vivek-nexus/transcriptonic#readme" target="_blank">Get help</a>
-          <span class="footer-separator">&#9679;</span>
-          <a href="https://github.com/vivek-nexus/transcriptonic/issues" target="_blank">Report a bug</a>
-        </div>
+    <div class="section">
+      <h3 style="margin-top: 0; color: #2A9ACA;">Prompt Personalizado</h3>
+      <div style="margin-bottom: 1rem;">
+        <label for="custom-prompt">Digite seu prompt personalizado</label>
+        <textarea id="custom-prompt" rows="3" placeholder="Digite seu prompt personalizado aqui..."></textarea>
       </div>
-      <p class="footer-link">
-        <span>
-          <span id="version"></span> /
-          <a href="https://github.com/vivek-nexus/transcriptonic?tab=readme-ov-file#notice" target="_blank">Notice</a>
-        </span>
-        <span>
-          Another project by <a href="https://vivek-nexus.github.io" target="_blank">Vivek</a>
-        </span>
-      </p>
+      <button id="execute-custom-prompt">Executar Prompt</button>
+    </div>
+
+    <div class="section">
+      <h3 style="margin-top: 0; color: #2A9ACA;">Resposta da IA</h3>
+      <div id="ai-response" class="ai-response">
+        As respostas da IA aparecerão aqui...
+      </div>
+      <div class="button-group">
+        <button id="copy-response" class="secondary">📋 Copiar</button>
+        <button id="clear-response" class="secondary">🗑️ Limpar</button>
+      </div>
     </div>
   </div>
 
