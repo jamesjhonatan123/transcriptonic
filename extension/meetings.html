@@ -307,6 +307,50 @@
                 margin: 0;
             }
         }
+
+        .quick-prompt-btn {
+            padding: 0.75rem;
+            background: rgba(42, 154, 202, 0.1);
+            border: 1px solid #2A9ACA;
+            border-radius: 6px;
+            color: #C0C0C0;
+            font-family: "SUSE", sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .quick-prompt-btn:hover {
+            background: rgba(42, 154, 202, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .quick-prompt-btn:active {
+            transform: translateY(0);
+        }
+
+        .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #a0a0a0;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .template-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .template-actions button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 3px;
+        }
     </style>
 </head>
 
@@ -343,7 +387,6 @@
 
             <div class="card">
                 <div class="webhook-header">
-                    <!-- <h3>Configure webhooks</h3> -->
                     <p><b>Integrate TranscripTonic with your favourite tools</b></p>
                 </div>
 
@@ -385,7 +428,6 @@
                     </div>
                 </form>
             </div>
-
 
             <div class="card">
                 <p class="card-heading">Webhook JSON body</p>
@@ -443,7 +485,7 @@
     ]
 }
 </pre>
-                    </code>
+                        </code>
                     </div>
                 </details>
                 <hr />
@@ -463,6 +505,100 @@
                     </a>
                 </div>
             </div>
+        </div>
+
+        <div>
+            <div class="webhook-section-heading">
+                <h2>AI Features</h2>
+                <span style="font-size: 28px;">🤖</span>
+            </div>
+
+        <div class="card">
+            <div class="webhook-header">
+                <p><b>🤖 AI Templates</b> - Create templates for AI-generated summaries</p>
+            </div>
+
+            <div class="form-field">
+                <label for="template-name">Template Name</label>
+                <div class="input-group">
+                    <input type="text" id="template-name" placeholder="e.g., Executive Summary">
+                    <button id="save-template">Save Template</button>
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label for="template-content">Template Content (HTML)</label>
+                <textarea id="template-content" rows="8" placeholder="Enter your HTML template here. Use {{summary}}, {{date}}, {{participants}} as placeholders.
+
+Example:
+<h1>Meeting Summary</h1>
+<p><strong>Date:</strong> {{date}}</p>
+<p><strong>Participants:</strong> {{participants}}</p>
+<div>{{summary}}</div>"
+                    style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif; resize: vertical;"></textarea>
+            </div>
+
+            <hr />
+
+            <p class="card-heading">Saved Templates</p>
+            <div id="templates-list" style="margin-bottom: 1rem;">
+                <!-- Templates will be loaded here -->
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="webhook-header">
+                <p><b>⚡ Quick Prompts</b> - Instant AI actions during meetings</p>
+            </div>
+
+            <div class="form-field">
+                <label>Predefined Prompts</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button class="quick-prompt-btn" data-prompt="Generate 5 relevant questions about the topics discussed so far">
+                        📝 Generate Questions
+                    </button>
+                    <button class="quick-prompt-btn" data-prompt="Summarize the key points discussed in this meeting so far">
+                        📋 Summarize So Far
+                    </button>
+                    <button class="quick-prompt-btn" data-prompt="List the action items and decisions made in this meeting">
+                        ✅ Action Items
+                    </button>
+                    <button class="quick-prompt-btn" data-prompt="Identify the main topics and themes discussed">
+                        🎯 Key Topics
+                    </button>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="form-field">
+                <label for="custom-prompt">Custom Prompt</label>
+                <div class="input-group">
+                    <textarea id="custom-prompt" rows="3" placeholder="Enter your custom prompt here..."
+                        style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif; resize: vertical;"></textarea>
+                </div>
+                <button id="execute-custom-prompt" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Execute Custom Prompt
+                </button>
+            </div>
+
+            <hr />
+
+            <div class="form-field">
+                <label>AI Response</label>
+                <div id="ai-response" style="min-height: 100px; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid #a0a0a0; white-space: pre-wrap; font-family: monospace;">
+                    AI responses will appear here...
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                    <button id="copy-response" style="padding: 0.25rem 0.5rem; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer;">
+                        📋 Copy
+                    </button>
+                    <button id="generate-pdf" style="padding: 0.25rem 0.5rem; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        📄 Generate PDF
+                    </button>
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 

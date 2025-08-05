@@ -1,92 +1,100 @@
 # TranscripTonic
+
 Simple Google Meet transcripts. Private and open source.
 
-![marquee-large](/assets/marquee-large.png)
+## Features
 
-Extension status: 🟢 OPERATIONAL (v3.1.3)
+### Core Functionality
+- **Auto mode**: Get transcripts of all meetings automatically
+- **Manual mode**: Switch on transcript as needed using the CC icon in Google Meet
+- **Webhook integration**: Integrate with your favorite tools
+- **Download transcripts**: Automatically download as text files at the end of each meeting
 
-<br />
-<br />
+### 🤖 AI-Powered Features
+- **Gemini API Integration**: Secure API key storage and testing
+- **AI Templates**: Create custom HTML templates for AI-generated summaries
+- **Quick Prompts**: Instant AI actions during meetings:
+  - Generate relevant questions
+  - Summarize key points
+  - List action items
+  - Identify main topics
+- **Custom Prompts**: Ask anything about your meeting
+- **Real-time AI Assistant**: Floating AI panel during Google Meet sessions
+- **PDF Export**: Generate HTML summaries and export them
 
+## Setup
 
+### Basic Setup
+1. Install the extension
+2. Choose between Auto or Manual mode
+3. Start your Google Meet session
 
-# Demo
-View video on [YouTube](https://www.youtube.com/watch?v=ARL6HbkakX4)
+### AI Features Setup
+1. **Get a Gemini API Key**:
+   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key
+   - Copy the key
 
-![demo](/assets/demo.gif)
+2. **Configure the Extension**:
+   - Click the extension icon
+   - Paste your Gemini API key
+   - Click "Test" to verify it works
+   - Click "Save Key"
 
+3. **Create Templates** (Optional):
+   - Go to the "Last 10 meetings" page
+   - Scroll to "AI Templates" section
+   - Create custom HTML templates with placeholders:
+     - `{{summary}}` - AI-generated summary
+     - `{{date}}` - Meeting date
+     - `{{participants}}` - List of participants
 
-<br />
-<br />
+## Using AI Features
 
+### During a Meeting
+- A floating 🤖 button appears in the top-right corner
+- Click it to open the AI Assistant panel
+- Use Quick Actions for common tasks:
+  - **📝 Questions**: Generate relevant questions
+  - **📋 Summary**: Summarize discussion so far
+  - **✅ Actions**: List action items and decisions
+  - **🎯 Topics**: Identify main themes
+- Or use the Custom Prompt field for specific requests
 
-# Installation
-<a href="https://chromewebstore.google.com/detail/ciepnfnceimjehngolkijpnbappkkiag" target="_blank">
-    <img src="https://developer.chrome.com/static/docs/webstore/branding/image/iNEddTyWiMfLSwFD6qGq.png" />
-</a>
+### After a Meeting
+- Go to "Last 10 meetings" page
+- Use the AI Templates section to generate formatted summaries
+- Use Quick Prompts for detailed analysis
+- Copy responses or generate PDF exports
 
-<br />
-<br />
+## Templates
 
-# How to use TranscripTonic
-![screenshot-2](/assets/screenshot-2.png)
-TranscripTonic has two modes of operation.
+The extension comes with 3 default templates:
+- **Executive Summary**: Professional summary format
+- **Meeting Minutes**: Traditional meeting minutes layout
+- **Project Update**: Project-focused update format
 
-**In both modes, transcript will be downloaded as a text file at the end of each meeting.**
+You can create your own templates using HTML and these placeholders:
+- `{{summary}}` - AI-generated content
+- `{{date}}` - Meeting date
+- `{{participants}}` - Participant list
 
-- **Auto mode:** Automatically records transcripts for all meetings
-- **Manual mode:** Switch on TranscripTonic by clicking on captions icon in Google Meet (CC icon)
+## Privacy & Security
 
+- Your Gemini API key is stored locally in your browser
+- Transcripts are processed locally and only sent to Gemini when you use AI features
+- No data is sent to external servers except for AI processing
+- All AI requests are made directly to Google's Gemini API
 
-<br />
-<br />
+## Webhook Integration
 
-# Integrating TranscripTonic with other tools using webhooks
-You can integrate TranscripTonic with any tool that accepts data from a webhook. Refer the "Set up webhooks" page in the extension for details about the webhook body.
-- [Google Docs integration guide](https://github.com/vivek-nexus/transcriptonic/wiki/Google-Docs-integration-guide?utm_source=readme)
-- [n8n integration guide](https://github.com/vivek-nexus/transcriptonic/wiki/n8n-integration-guide?utm_source=readme)
+Set up webhooks to integrate TranscripTonic with your favorite tools like Google Docs, Notion, or n8n.
 
-<br />
-<br />
+## Support
 
-# FAQs
+- [Get help](https://github.com/vivek-nexus/transcriptonic#readme)
+- [Report a bug](https://github.com/vivek-nexus/transcriptonic/issues)
 
-**1. Can I change the language of the transcript?**
+## License
 
-Yes. TranscripTonic picks up the output of Google Meet captions. Google Meet captions supports variety of languages that you can choose from. Click the settings icon when captions start showing and change the language.
-
-**2. I did not get any transcript at the end of the meeting.**
-
-This could happen when:
-1. New errors caused by Google Meet updates
-2. Any unexpected events like network drop, browser crashes etc.
-
-When this happens, it might be possible to recover the transcript, but recovery should be done before starting another meeting.
-- Open the extension and click on "last 10 meetings". Click on "Recover last meeting" button present after the table.
-- TranscripTonic will also attempt to auto-recover any missed transcripts, just before a new meeting starts.
-
-<br />
-<br />
-
-# Privacy policy
-TranscripTonic Chrome extension does not collect any information from users in any manner, except anonymous errors and transcript download timestamp. All processing/transcript storage happens within the user's Chrome browser and does not leave the device, unless you configure a webhook and choose to post data to your webhook URL.
-
-<br />
-<br />
-
-# Notice
-The transcript may not always be accurate and is only intended to aid in improving productivity. It is the responsibility of the user to ensure they comply with any applicable laws/rules.
-
-<br />
-<br />
-
-# Installing unpacked extension
-1. Download the unpacked extension zip file from GitHub using this [link](https://raw.githubusercontent.com/vivek-nexus/transcriptonic/refs/heads/main/extension-unpacked.zip)
-2. Open `chrome://extensions` in a new Chrome tab
-3. Enable "Developer mode" from top right corner
-4. Drag and drop the unpacked extension zip file to complete the installation process
-5. If drag and drop of zip file does not work, unzip the file. Click on "Load unpacked" in chrome extensions page and select the `extension-unpacked` folder to complete the installation process.
-6. Remove unpacked extension when no longer needed. Your meeting data of unpacked extension and extension installed from Chrome Store, are stored separately.
-
-<br />
-<br />
+[License details](LICENSE)
