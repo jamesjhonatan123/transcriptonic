@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -361,6 +360,9 @@
         <div>
             <h2>Last 10 meetings</h2>
             <div class="transcripts-section">
+                <!-- Adicionar uma dica acima da tabela de reuniões -->
+                <p class="sub-text" style="margin: 0.5rem 0 1rem 0;">Dica: use o botão "Gerar resumo" para escolher um template e criar o resumo com IA.</p>
+
                 <table>
                     <thead>
                         <tr>
@@ -509,40 +511,53 @@
 
         <div>
             <div class="webhook-section-heading">
-                <h2>AI Features</h2>
+                <h2>Recursos de IA</h2>
                 <span style="font-size: 28px;">🤖</span>
             </div>
 
         <div class="card">
             <div class="webhook-header">
-                <p><b>🤖 AI Templates</b> - Create templates for AI-generated summaries</p>
+                <p><b>🤖 Templates de IA</b> - Crie templates para resumos gerados por IA</p>
             </div>
 
             <div class="form-field">
-                <label for="template-name">Template Name</label>
+                <label for="template-name">Nome do Template</label>
                 <div class="input-group">
-                    <input type="text" id="template-name" placeholder="e.g., Executive Summary">
-                    <button id="save-template">Save Template</button>
+                    <input type="text" id="template-name" placeholder="ex.: Resumo Executivo">
+                    <button id="save-template">Salvar Template</button>
                 </div>
             </div>
 
             <div class="form-field">
-                <label for="template-content">Template Content (HTML)</label>
-                <textarea id="template-content" rows="8" placeholder="Enter your HTML template here. Use {{summary}}, {{date}}, {{participants}} as placeholders.
+                <label for="template-content">Conteúdo do Template (HTML)</label>
+                <div style="position: relative;">
+                    <textarea id="template-content" rows="12" placeholder="Digite seu template HTML aqui. Use {{summary}}, {{date}}, {{participants}}, {{title}}, {{duration}} como placeholders.
 
-Example:
-<h1>Meeting Summary</h1>
-<p><strong>Date:</strong> {{date}}</p>
-<p><strong>Participants:</strong> {{participants}}</p>
-<div>{{summary}}</div>"
-                    style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif; resize: vertical;"></textarea>
+Exemplo de template:
+<div style='font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;'>
+    <header style='border-bottom: 2px solid #2A9ACA; padding-bottom: 10px; margin-bottom: 20px;'>
+        <h1 style='color: #2A9ACA; margin: 0;'>{{title}}</h1>
+        <p style='margin: 5px 0; color: #666;'>Data: {{date}} | Duração: {{duration}}</p>
+        <p style='margin: 5px 0; color: #666;'>Participantes: {{participants}}</p>
+    </header>
+    <main>
+        <h2 style='color: #333;'>Resumo da Reunião</h2>
+        <div style='line-height: 1.6; color: #444;'>{{summary}}</div>
+    </main>
+</div>"
+                        style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif; resize: vertical; font-size: 13px;"
+                        maxlength="81920"></textarea>
+                    <div id="template-char-count" style="position: absolute; bottom: 8px; right: 8px; font-size: 11px; color: #888; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 3px;">
+                        0 / 80KB
+                    </div>
+                </div>
             </div>
 
             <hr />
 
-            <p class="card-heading">Saved Templates</p>
+            <p class="card-heading">Templates Salvos</p>
             <div id="templates-list" style="margin-bottom: 1rem;">
-                <!-- Templates will be loaded here -->
+                <!-- Templates serão carregados aqui -->
             </div>
         </div>
 
