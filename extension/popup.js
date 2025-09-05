@@ -28,7 +28,7 @@ window.onload = function () {
   })
 
   // Create default templates on first run
-  chrome.storage.sync.get(["aiTemplates", "defaultTemplatesCreated"], function(result) {
+  chrome.storage.sync.get(["aiTemplates", "defaultTemplatesCreated"], function (result) {
     if (!result.defaultTemplatesCreated) {
       const defaultTemplates = [
         {
@@ -95,10 +95,10 @@ window.onload = function () {
           createdAt: new Date().toISOString()
         }
       ]
-      
-      chrome.storage.sync.set({ 
+
+      chrome.storage.sync.set({
         aiTemplates: defaultTemplates,
-        defaultTemplatesCreated: true 
+        defaultTemplatesCreated: true
       })
     }
   })
@@ -109,9 +109,9 @@ window.onload = function () {
       const apiKey = geminiApiKeyInput.value.trim()
       const model = geminiModelSelect.value
       if (apiKey) {
-        chrome.storage.sync.set({ 
+        chrome.storage.sync.set({
           geminiApiKey: apiKey,
-          geminiModel: model 
+          geminiModel: model
         }, function () {
           // Visual feedback
           saveApiKeyButton.textContent = "Salvo!"

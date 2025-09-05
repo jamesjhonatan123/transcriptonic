@@ -1,443 +1,461 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TranscripTonic—Meetings</title>
     <style>
-        @import url("https://fonts.googleapis.com/css2?family=SUSE:wght@400;700&display=swap");
+      @import url("https://fonts.googleapis.com/css2?family=SUSE:wght@400;700&display=swap");
 
-        body {
-            font-family: "SUSE", sans-serif;
-            padding: 1.5rem 3rem;
-            color: #C0C0C0;
-            background: #071f29;
-            font-size: 1rem;
+      body {
+        font-family: "SUSE", sans-serif;
+        padding: 1.5rem 3rem;
+        color: #c0c0c0;
+        background: #071f29;
+        font-size: 1rem;
+      }
+
+      h1 {
+        margin: 0.5rem 0rem 1.5rem 0rem;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        align-items: start;
+      }
+
+      .grid-container > * {
+        overflow-x: auto;
+      }
+
+      .card {
+        grid-column: 1;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem 0rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+      }
+
+      h2 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+      }
+
+      .webhook-section-heading {
+        display: flex;
+        gap: 0.5rem;
+        align-items: start;
+      }
+
+      /* Custom scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #a0a0a0;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #2a9aca;
+      }
+
+      .webhook-header {
+        padding: 1rem 1.5rem;
+        background: #2a9aca1a;
+        margin-bottom: 1.5rem;
+        margin-top: -1.5rem;
+
+        p {
+          margin: 0;
         }
+      }
 
-        h1 {
-            margin: 0.5rem 0rem 1.5rem 0rem;
-        }
+      .form-field {
+        padding: 0px 1.5rem;
+      }
 
-        .grid-container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-            align-items: start;
-        }
-
-        .grid-container>* {
-            overflow-x: auto;
-        }
-
-        .card {
-            grid-column: 1;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1.5rem 0rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-        }
-
-        h2 {
-            margin-top: 0;
-            margin-bottom: 1rem;
-        }
-
-        .webhook-section-heading {
-            display: flex;
-            gap: 0.5rem;
-            align-items: start;
-        }
-
-        /* Custom scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #a0a0a0;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #2A9ACA;
-        }
-
-        .webhook-header {
-            padding: 1rem 1.5rem;
-            background: #2a9aca1a;
-            margin-bottom: 1.5rem;
-            margin-top: -1.5rem;
-
-            p {
-                margin: 0;
-            }
-        }
-
-        .form-field {
-            padding: 0px 1.5rem;
-        }
-
-
-        /* .form-field:not(:last-of-type) {
+      /* .form-field:not(:last-of-type) {
             margin-bottom: 2rem;
         } */
 
-        hr {
-            margin: 1.5rem 0rem;
-            border: 1px solid #2a9aca33;
+      hr {
+        margin: 1.5rem 0rem;
+        border: 1px solid #2a9aca33;
+      }
+
+      .input-group {
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+      }
+
+      label {
+        display: block;
+        cursor: pointer;
+      }
+
+      .sub-text {
+        font-weight: normal;
+        color: #a0a0a0;
+      }
+
+      input[type="url"] {
+        width: 100%;
+        padding: 0.45rem;
+        border: 1px solid #2a9aca;
+        border-radius: 4px 0px 0px 4px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-family: "SUSE", sans-serif;
+        box-sizing: border-box;
+      }
+
+      .checkbox-group {
+        display: flex;
+        gap: 8px;
+      }
+
+      input[type="checkbox"] {
+        margin: 0;
+        margin-top: 0.15rem;
+        accent-color: #2a9aca;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .radio-item {
+        display: flex;
+        gap: 0.5rem;
+        align-items: start;
+      }
+
+      .radio-item:not(:last-of-type) {
+        margin-bottom: 0.5rem;
+      }
+
+      input[type="radio"] {
+        margin: 0;
+        margin-top: 0.3rem;
+        width: 16px;
+        height: 16px;
+      }
+
+      button {
+        background: #2a9aca;
+        color: #071f29;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-family: "SUSE", sans-serif;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      #save-webhook {
+        border-radius: 0px 4px 4px 0px;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      details {
+        padding: 0px 1.5rem;
+      }
+
+      details:first-of-type {
+        margin-bottom: 0.5rem;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: bold;
+        color: #2a9aca;
+      }
+
+      .accordion-content {
+        margin-bottom: 1.5rem;
+      }
+
+      .code-block {
+        margin: 1rem 0rem;
+        overflow-x: auto;
+        padding: 1rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        line-height: 1.5;
+      }
+
+      .code-block pre {
+        margin: 0;
+        white-space: pre;
+      }
+
+      .meetings-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #recover-last-meeting {
+        background: transparent;
+        color: #2a9aca;
+        border: 1px solid #2a9aca;
+        margin: 1rem 0;
+        padding: 0.25rem 0.5rem;
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff1a;
+        border-radius: 8px;
+      }
+
+      th,
+      td {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        border-bottom: 1px solid #2a9aca33;
+      }
+
+      th {
+        background: #2a9aca1a;
+        font-weight: bold;
+      }
+
+      .status-success {
+        color: #4caf50;
+        font-weight: bold;
+      }
+
+      .status-failed {
+        color: #f44336;
+        font-weight: bold;
+      }
+
+      .status-new {
+        color: #ffa726;
+        font-weight: bold;
+      }
+
+      .download-button {
+        background: transparent;
+        color: #2a9aca;
+        border: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: end;
+      }
+
+      .post-button {
+        background: transparent;
+        color: #2a9aca;
+        border: 1px solid #2a9aca;
+        padding: 0.25rem 0.5rem;
+        display: flex;
+        gap: 0.25rem;
+        align-items: center;
+      }
+
+      .card-heading {
+        margin: 0rem 1.5rem 0.5rem 1.5rem;
+        font-weight: bold;
+      }
+
+      .integration-card {
+        padding: 0rem 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      .integration-guide {
+        padding: 0.5rem;
+        background: transparent;
+        border: 1px solid #2a9aca88;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: start;
+        gap: 0.5rem;
+        color: #2a9aca;
+        font-weight: bold;
+        text-decoration: none;
+
+        img {
+          margin-top: 0.1rem;
         }
 
-        .input-group {
-            margin-top: 0.5rem;
-            display: flex;
-            align-items: center;
+        p {
+          margin: 0;
         }
+      }
 
-        label {
-            display: block;
-            cursor: pointer;
-        }
+      .quick-prompt-btn {
+        padding: 0.75rem;
+        background: rgba(42, 154, 202, 0.1);
+        border: 1px solid #2a9aca;
+        border-radius: 6px;
+        color: #c0c0c0;
+        font-family: "SUSE", sans-serif;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+      }
 
-        .sub-text {
-            font-weight: normal;
-            color: #a0a0a0;
-        }
+      .quick-prompt-btn:hover {
+        background: rgba(42, 154, 202, 0.2);
+        transform: translateY(-1px);
+      }
 
-        input[type="url"] {
-            width: 100%;
-            padding: 0.45rem;
-            border: 1px solid #2A9ACA;
-            border-radius: 4px 0px 0px 4px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-family: "SUSE", sans-serif;
-            box-sizing: border-box;
-        }
+      .quick-prompt-btn:active {
+        transform: translateY(0);
+      }
 
-        .checkbox-group {
-            display: flex;
-            gap: 8px;
-        }
+      .template-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #a0a0a0;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+      }
 
-        input[type="checkbox"] {
-            margin: 0;
-            margin-top: 0.15rem;
-            accent-color: #2A9ACA;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
+      .template-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
 
-        .radio-item {
-            display: flex;
-            gap: 0.5rem;
-            align-items: start;
-        }
-
-        .radio-item:not(:last-of-type) {
-            margin-bottom: 0.5rem;
-        }
-
-        input[type="radio"] {
-            margin: 0;
-            margin-top: 0.3rem;
-            width: 16px;
-            height: 16px;
-        }
-
-        button {
-            background: #2A9ACA;
-            color: #071f29;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            font-family: "SUSE", sans-serif;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        #save-webhook {
-            border-radius: 0px 4px 4px 0px;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        details {
-            padding: 0px 1.5rem;
-        }
-
-        details:first-of-type {
-            margin-bottom: 0.5rem;
-        }
-
-        summary {
-            cursor: pointer;
-            font-weight: bold;
-            color: #2A9ACA;
-        }
-
-        .accordion-content {
-            margin-bottom: 1.5rem;
-        }
-
-        .code-block {
-            margin: 1rem 0rem;
-            overflow-x: auto;
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            line-height: 1.5;
-        }
-
-        .code-block pre {
-            margin: 0;
-            white-space: pre;
-        }
-
-        .meetings-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #recover-last-meeting {
-            background: transparent;
-            color: #2A9ACA;
-            border: 1px solid #2A9ACA;
-            margin: 1rem 0;
-            padding: 0.25rem 0.5rem;
-            display: flex;
-            gap: 0.25rem;
-            align-items: center;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #ffffff1a;
-            border-radius: 8px;
-        }
-
-        th,
-        td {
-            padding: 1rem 1.5rem;
-            text-align: left;
-            border-bottom: 1px solid #2a9aca33;
-        }
-
-        th {
-            background: #2a9aca1a;
-            font-weight: bold;
-        }
-
-        .status-success {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-
-        .status-failed {
-            color: #f44336;
-            font-weight: bold
-        }
-
-        .status-new {
-            color: #FFA726;
-            font-weight: bold
-        }
-
-        .download-button {
-            background: transparent;
-            color: #2A9ACA;
-            border: none;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: end;
-        }
-
-        .post-button {
-            background: transparent;
-            color: #2A9ACA;
-            border: 1px solid #2A9ACA;
-            padding: 0.25rem 0.5rem;
-            display: flex;
-            gap: 0.25rem;
-            align-items: center;
-        }
-
-        .card-heading {
-            margin: 0rem 1.5rem 0.5rem 1.5rem;
-            font-weight: bold;
-        }
-
-        .integration-card {
-            padding: 0rem 1.5rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-
-        .integration-guide {
-            padding: 0.5rem;
-            background: transparent;
-            border: 1px solid #2a9aca88;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: start;
-            gap: 0.5rem;
-            color: #2A9ACA;
-            font-weight: bold;
-            text-decoration: none;
-
-            img {
-                margin-top: 0.1rem;
-            }
-
-            p {
-                margin: 0;
-            }
-        }
-
-        .quick-prompt-btn {
-            padding: 0.75rem;
-            background: rgba(42, 154, 202, 0.1);
-            border: 1px solid #2A9ACA;
-            border-radius: 6px;
-            color: #C0C0C0;
-            font-family: "SUSE", sans-serif;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: left;
-        }
-
-        .quick-prompt-btn:hover {
-            background: rgba(42, 154, 202, 0.2);
-            transform: translateY(-1px);
-        }
-
-        .quick-prompt-btn:active {
-            transform: translateY(0);
-        }
-
-        .template-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #a0a0a0;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
-        }
-
-        .template-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .template-actions button {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
-            border-radius: 3px;
-        }
+      .template-actions button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        border-radius: 3px;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>TranscripTonic</h1>
 
     <div class="grid-container">
-        <div>
-            <h2>Last 10 meetings</h2>
-            <div class="transcripts-section">
-                <!-- Adicionar uma dica acima da tabela de reuniões -->
-                <p class="sub-text" style="margin: 0.5rem 0 1rem 0;">Dica: use o botão "Gerar resumo" para escolher um template e criar o resumo com IA.</p>
+      <div>
+        <h2>Last 10 meetings</h2>
+        <div class="transcripts-section">
+          <!-- Adicionar uma dica acima da tabela de reuniões -->
+          <p class="sub-text" style="margin: 0.5rem 0 1rem 0">
+            Dica: use o botão "Gerar resumo" para escolher um template e criar o
+            resumo com IA.
+          </p>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Meeting title</th>
-                            <th>Meeting start time and duration</th>
-                            <th>Webhook status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="transcripts-table">
-                        <!-- Table content will be populated by JavaScript -->
-                    </tbody>
-                </table>
+          <table>
+            <thead>
+              <tr>
+                <th>Meeting title</th>
+                <th>Meeting start time and duration</th>
+                <th>Webhook status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transcripts-table">
+              <!-- Table content will be populated by JavaScript -->
+            </tbody>
+          </table>
 
-                <button id="recover-last-meeting">Recover last meeting</button>
-            </div>
+          <button id="recover-last-meeting">Recover last meeting</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="webhook-section-heading">
+          <h2>Webhooks</h2>
+          <img src="./icons/webhook-white.svg" alt="" width="28px" />
         </div>
 
-        <div>
-            <div class="webhook-section-heading">
-                <h2>Webhooks</h2>
-                <img src="./icons/webhook-white.svg" alt="" width="28px">
+        <div class="card">
+          <div class="webhook-header">
+            <p><b>Integrate TranscripTonic with your favourite tools</b></p>
+          </div>
+
+          <form id="webhook-url-form" class="form-field">
+            <label for="webhook-url">Webhook URL</label>
+            <div class="input-group">
+              <input
+                type="url"
+                id="webhook-url"
+                placeholder="https://your-webhook-url.com"
+              />
+              <button id="save-webhook">Save</button>
             </div>
+          </form>
 
-            <div class="card">
-                <div class="webhook-header">
-                    <p><b>Integrate TranscripTonic with your favourite tools</b></p>
-                </div>
+          <hr />
 
-                <form id="webhook-url-form" class="form-field">
-                    <label for="webhook-url">Webhook URL</label>
-                    <div class="input-group">
-                        <input type="url" id="webhook-url" placeholder="https://your-webhook-url.com">
-                        <button id="save-webhook">Save</button>
-                    </div>
-                </form>
-
-                <hr />
-
-                <form class="form-field">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="auto-post-webhook" checked>
-                        <label for="auto-post-webhook">
-                            Automatically post transcript after each
-                            meeting, to webhook URL
-                        </label>
-                    </div>
-                </form>
-
-                <hr />
-
-                <form class="form-field">
-                    <div class="radio-item">
-                        <input type="radio" name="webhook-body-type" id="simple-webhook-body" checked />
-                        <label for="simple-webhook-body"><b>Simple webhook body</b>
-                            <br /><span class="sub-text">Pre-formatted data, suitable for no-code
-                                integrations</span>
-                        </label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" name="webhook-body-type" id="advanced-webhook-body" />
-                        <label for="advanced-webhook-body"><b>Advanced webhook body</b> <br />
-                            <span class="sub-text">Raw data, suitable for code integrations</span>
-                        </label>
-                    </div>
-                </form>
+          <form class="form-field">
+            <div class="checkbox-group">
+              <input type="checkbox" id="auto-post-webhook" checked />
+              <label for="auto-post-webhook">
+                Automatically post transcript after each meeting, to webhook URL
+              </label>
             </div>
+          </form>
 
-            <div class="card">
-                <p class="card-heading">Webhook JSON body</p>
-                <details>
-                    <summary>Webhook body (simple)</summary>
-                    <div class="code-block accordion-content">
-                        <code>
-                        <pre>
+          <hr />
+
+          <form class="form-field">
+            <div class="radio-item">
+              <input
+                type="radio"
+                name="webhook-body-type"
+                id="simple-webhook-body"
+                checked
+              />
+              <label for="simple-webhook-body"
+                ><b>Simple webhook body</b> <br /><span class="sub-text"
+                  >Pre-formatted data, suitable for no-code integrations</span
+                >
+              </label>
+            </div>
+            <div class="radio-item">
+              <input
+                type="radio"
+                name="webhook-body-type"
+                id="advanced-webhook-body"
+              />
+              <label for="advanced-webhook-body"
+                ><b>Advanced webhook body</b> <br />
+                <span class="sub-text"
+                  >Raw data, suitable for code integrations</span
+                >
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <p class="card-heading">Webhook JSON body</p>
+          <details>
+            <summary>Webhook body (simple)</summary>
+            <div class="code-block accordion-content">
+              <code>
+                <pre>
 {
     "webhookBodyType": "simple",
     "meetingTitle": "Team meeting",
@@ -446,16 +464,17 @@
     "transcript": "Priya (01/15/2024, 10:00 AM)\nHi everyone!\n\nCarlos (01/15/2024, 10:01 AM)\nHello Priya!...\n\n",
     "chatMessages": "Mohammed (01/15/2024, 10:05 AM)\nCan you share the slides?\n\nSofia (01/15/2024, 10:06 AM)\nHere's the link: ...\n\n"
 }
-</pre>
-                        </code>
-                    </div>
-                </details>
+</pre
+                >
+              </code>
+            </div>
+          </details>
 
-                <details>
-                    <summary>Webhook body (advanced)</summary>
-                    <div class="code-block accordion-content">
-                        <code>
-                            <pre>
+          <details>
+            <summary>Webhook body (advanced)</summary>
+            <div class="code-block accordion-content">
+              <code>
+                <pre>
 {
     "webhookBodyType": "advanced",
     "meetingTitle": "Team meeting",
@@ -487,51 +506,65 @@
     ]
 }
 </pre>
-                        </code>
-                    </div>
-                </details>
-                <hr />
-                <p class="card-heading">Helpful guides</p>
-                <div class="integration-card">
-                    <a class="integration-guide"
-                        href="https://github.com/vivek-nexus/transcriptonic/wiki/Google-Docs-integration-guide?utm_source=extension"
-                        target="_blank">
-                        <img src="./icons/guide.svg" alt="" width="16px">
-                        <p>Get transcripts on Google Docs</p>
-                    </a>
-                    <a class="integration-guide"
-                        href="https://github.com/vivek-nexus/transcriptonic/wiki/n8n-integration-guide?utm_source=extension"
-                        target="_blank">
-                        <img src="./icons/guide.svg" alt="" width="16px">
-                        <p>Using webhooks with n8n</p>
-                    </a>
-                </div>
+        </code>
             </div>
+          </details>
+          <hr />
+      <p class="card-heading">Helpful guides</p>
+          <div class="integration-card">
+            <a
+              class="integration-guide"
+              href="https://github.com/vivek-nexus/transcriptonic/wiki/Google-Docs-integration-guide?utm_source=extension"
+              target="_blank"
+            >
+              <img src="./icons/guide.svg" alt="" width="16px" />
+              <p>Get transcripts on Google Docs</p>
+            </a>
+            <a
+              class="integration-guide"
+              href="https://github.com/vivek-nexus/transcriptonic/wiki/n8n-integration-guide?utm_source=extension"
+              target="_blank"
+            >
+              <img src="./icons/guide.svg" alt="" width="16px" />
+              <p>Using webhooks with n8n</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="webhook-section-heading">
+          <h2>Recursos de IA</h2>
+          <span style="font-size: 28px">🤖</span>
         </div>
 
-        <div>
-            <div class="webhook-section-heading">
-                <h2>Recursos de IA</h2>
-                <span style="font-size: 28px;">🤖</span>
-            </div>
-
         <div class="card">
-            <div class="webhook-header">
-                <p><b>🤖 Templates de IA</b> - Crie templates para resumos gerados por IA</p>
-            </div>
+          <div class="webhook-header">
+            <p>
+              <b>🤖 Templates de IA</b> - Crie templates para resumos gerados
+              por IA
+            </p>
+          </div>
 
-            <div class="form-field">
-                <label for="template-name">Nome do Template</label>
-                <div class="input-group">
-                    <input type="text" id="template-name" placeholder="ex.: Resumo Executivo">
-                    <button id="save-template">Salvar Template</button>
-                </div>
+          <div class="form-field">
+            <label for="template-name">Nome do Template</label>
+            <div class="input-group">
+              <input
+                type="text"
+                id="template-name"
+                placeholder="ex.: Resumo Executivo"
+              />
+              <button id="save-template">Salvar Template</button>
             </div>
+          </div>
 
-            <div class="form-field">
-                <label for="template-content">Conteúdo do Template (HTML)</label>
-                <div style="position: relative;">
-                    <textarea id="template-content" rows="12" placeholder="Digite seu template HTML aqui. Use {{summary}}, {{date}}, {{participants}}, {{title}}, {{duration}} como placeholders.
+          <div class="form-field">
+            <label for="template-content">Conteúdo do Template (HTML)</label>
+            <div style="position: relative">
+              <textarea
+                id="template-content"
+                rows="12"
+                placeholder="Digite seu template HTML aqui. Use {{summary}}, {{date}}, {{participants}}, {{title}}, {{duration}} como placeholders.
 
 Exemplo de template:
 <div style='font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;'>
@@ -545,79 +578,175 @@ Exemplo de template:
         <div style='line-height: 1.6; color: #444;'>{{summary}}</div>
     </main>
 </div>"
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif; resize: vertical; font-size: 13px;"
-                        maxlength="81920"></textarea>
-                    <div id="template-char-count" style="position: absolute; bottom: 8px; right: 8px; font-size: 11px; color: #888; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 3px;">
-                        0 / 80KB
-                    </div>
-                </div>
+                style="
+                  width: 100%;
+                  padding: 0.5rem;
+                  border: 1px solid #a0a0a0;
+                  border-radius: 4px;
+                  background: rgba(255, 255, 255, 0.1);
+                  color: #c0c0c0;
+                  font-family: 'SUSE', sans-serif;
+                  resize: vertical;
+                  font-size: 13px;
+                "
+                maxlength="81920"
+              ></textarea>
+              <div
+                id="template-char-count"
+                style="
+                  position: absolute;
+                  bottom: 8px;
+                  right: 8px;
+                  font-size: 11px;
+                  color: #888;
+                  background: rgba(0, 0, 0, 0.7);
+                  padding: 2px 6px;
+                  border-radius: 3px;
+                "
+              >
+                0 / 80KB
+              </div>
             </div>
+          </div>
 
-            <hr />
+          <hr />
 
-            <p class="card-heading">Templates Salvos</p>
-            <div id="templates-list" style="margin-bottom: 1rem;">
-                <!-- Templates serão carregados aqui -->
-            </div>
+          <p class="card-heading">Templates Salvos</p>
+          <div id="templates-list" style="margin-bottom: 1rem">
+            <!-- Templates serão carregados aqui -->
+          </div>
         </div>
 
         <div class="card">
-            <div class="webhook-header">
-                <p><b>⚡ Quick Prompts</b> - Instant AI actions during meetings</p>
+          <div class="webhook-header">
+            <p><b>⚡ Quick Prompts</b> - Instant AI actions during meetings</p>
+          </div>
+
+          <div class="form-field">
+            <label>Predefined Prompts</label>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+              "
+            >
+              <button
+                class="quick-prompt-btn"
+                data-prompt="Generate 5 relevant questions about the topics discussed so far"
+              >
+                📝 Generate Questions
+              </button>
+              <button
+                class="quick-prompt-btn"
+                data-prompt="Summarize the key points discussed in this meeting so far"
+              >
+                📋 Summarize So Far
+              </button>
+              <button
+                class="quick-prompt-btn"
+                data-prompt="List the action items and decisions made in this meeting"
+              >
+                ✅ Action Items
+              </button>
+              <button
+                class="quick-prompt-btn"
+                data-prompt="Identify the main topics and themes discussed"
+              >
+                🎯 Key Topics
+              </button>
             </div>
+          </div>
 
-            <div class="form-field">
-                <label>Predefined Prompts</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
-                    <button class="quick-prompt-btn" data-prompt="Generate 5 relevant questions about the topics discussed so far">
-                        📝 Generate Questions
-                    </button>
-                    <button class="quick-prompt-btn" data-prompt="Summarize the key points discussed in this meeting so far">
-                        📋 Summarize So Far
-                    </button>
-                    <button class="quick-prompt-btn" data-prompt="List the action items and decisions made in this meeting">
-                        ✅ Action Items
-                    </button>
-                    <button class="quick-prompt-btn" data-prompt="Identify the main topics and themes discussed">
-                        🎯 Key Topics
-                    </button>
-                </div>
+          <hr />
+
+          <div class="form-field">
+            <label for="custom-prompt">Custom Prompt</label>
+            <div class="input-group">
+              <textarea
+                id="custom-prompt"
+                rows="3"
+                placeholder="Enter your custom prompt here..."
+                style="
+                  width: 100%;
+                  padding: 0.5rem;
+                  border: 1px solid #a0a0a0;
+                  border-radius: 4px;
+                  background: rgba(255, 255, 255, 0.1);
+                  color: #c0c0c0;
+                  font-family: 'SUSE', sans-serif;
+                  resize: vertical;
+                "
+              ></textarea>
             </div>
+            <button
+              id="execute-custom-prompt"
+              style="
+                margin-top: 0.5rem;
+                padding: 0.5rem 1rem;
+                background: #2a9aca;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+              "
+            >
+              Execute Custom Prompt
+            </button>
+          </div>
 
-            <hr />
+          <hr />
 
-            <div class="form-field">
-                <label for="custom-prompt">Custom Prompt</label>
-                <div class="input-group">
-                    <textarea id="custom-prompt" rows="3" placeholder="Enter your custom prompt here..."
-                        style="width: 100%; padding: 0.5rem; border: 1px solid #a0a0a0; border-radius: 4px; background: rgba(255,255,255,0.1); color: #C0C0C0; font-family: 'SUSE', sans-serif; resize: vertical;"></textarea>
-                </div>
-                <button id="execute-custom-prompt" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Execute Custom Prompt
-                </button>
+          <div class="form-field">
+            <label>AI Response</label>
+            <div
+              id="ai-response"
+              style="
+                min-height: 100px;
+                padding: 1rem;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 4px;
+                border: 1px solid #a0a0a0;
+                white-space: pre-wrap;
+                font-family: monospace;
+              "
+            >
+              AI responses will appear here...
             </div>
-
-            <hr />
-
-            <div class="form-field">
-                <label>AI Response</label>
-                <div id="ai-response" style="min-height: 100px; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid #a0a0a0; white-space: pre-wrap; font-family: monospace;">
-                    AI responses will appear here...
-                </div>
-                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                    <button id="copy-response" style="padding: 0.25rem 0.5rem; background: transparent; color: #2A9ACA; border: 1px solid #2A9ACA; border-radius: 4px; cursor: pointer;">
-                        📋 Copy
-                    </button>
-                    <button id="generate-pdf" style="padding: 0.25rem 0.5rem; background: #2A9ACA; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                        📄 Generate PDF
-                    </button>
-                </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem">
+              <button
+                id="copy-response"
+                style="
+                  padding: 0.25rem 0.5rem;
+                  background: transparent;
+                  color: #2a9aca;
+                  border: 1px solid #2a9aca;
+                  border-radius: 4px;
+                  cursor: pointer;
+                "
+              >
+                📋 Copy
+              </button>
+              <button
+                id="generate-pdf"
+                style="
+                  padding: 0.25rem 0.5rem;
+                  background: #2a9aca;
+                  color: white;
+                  border: none;
+                  border-radius: 4px;
+                  cursor: pointer;
+                "
+              >
+                📄 Generate PDF
+              </button>
             </div>
+          </div>
         </div>
-        </div>
+      </div>
     </div>
 
     <script src="meetings.js"></script>
-</body>
-
+  </body>
 </html>

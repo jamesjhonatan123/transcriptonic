@@ -33,7 +33,7 @@ function safeStorageSet(items, cb) {
             alert('Template muito grande para salvar. Reduza o conteúdo.')
             return
         }
-    } catch {}
+    } catch { }
     getTemplateStore().set(items, () => {
         const err = chrome.runtime.lastError
         if (err) {
@@ -222,7 +222,7 @@ function loadMeetings() {
                         <td>${meeting.meetingTitle || meeting.title || 'Google Meet call'}</td>
                         <td>${timestamp} &nbsp; &#9679; &nbsp; ${durationString}</td>
                         <td>
-                            ${(() => { switch (meeting.webhookPostStatus) { case 'successful': return `<span class="status-success">Successful</span>`; case 'failed': return `<span class="status-failed">Failed</span>`; case 'new': return `<span class="status-new">New</span>`; default: return `<span class="status-new">Unknown</span>` }})()}
+                            ${(() => { switch (meeting.webhookPostStatus) { case 'successful': return `<span class="status-success">Successful</span>`; case 'failed': return `<span class="status-failed">Failed</span>`; case 'new': return `<span class="status-new">New</span>`; default: return `<span class="status-new">Unknown</span>` } })()}
                         </td>
                         <td>
                             <div style="min-width: 200px; display: flex; gap: 0.5rem; align-items: center;">
@@ -356,9 +356,9 @@ function initializeAIFeatures() {
             const kbSize = (byteSize / 1024).toFixed(1)
             const maxKb = 80
             const percentage = Math.min(100, (byteSize / (maxKb * 1024)) * 100)
-            
+
             charCountDiv.textContent = `${kbSize}KB / ${maxKb}KB`
-            
+
             // Mudar cor baseado no uso
             if (percentage > 90) {
                 charCountDiv.style.color = '#ff6b6b'
@@ -371,7 +371,7 @@ function initializeAIFeatures() {
                 charCountDiv.style.background = 'rgba(0,0,0,0.7)'
             }
         }
-        
+
         templateContentInput.addEventListener('input', updateCharCount)
         templateContentInput.addEventListener('paste', () => setTimeout(updateCharCount, 10))
         updateCharCount() // Inicializar
@@ -390,7 +390,7 @@ function initializeAIFeatures() {
             // Checagem de tamanho
             const approxSize = new Blob([content]).size
             if (approxSize > TEMPLATE_MAX_LEN) {
-                if (!confirm('O template é grande (~' + Math.round(approxSize/1024) + 'KB). Salvar mesmo assim?')) {
+                if (!confirm('O template é grande (~' + Math.round(approxSize / 1024) + 'KB). Salvar mesmo assim?')) {
                     return
                 }
             }
@@ -435,7 +435,7 @@ function initializeAIFeatures() {
 
     // Quick prompts functionality
     quickPromptBtns.forEach(btn => {
-        btn.addEventListener("click", function() {
+        btn.addEventListener("click", function () {
             const prompt = this.dataset.prompt
             executePrompt(prompt)
         })
@@ -443,7 +443,7 @@ function initializeAIFeatures() {
 
     // Custom prompt functionality
     if (executeCustomPromptBtn && customPromptInput) {
-        executeCustomPromptBtn.addEventListener("click", function() {
+        executeCustomPromptBtn.addEventListener("click", function () {
             const prompt = customPromptInput.value.trim()
             if (!prompt) {
                 alert("Please enter a custom prompt")
@@ -455,7 +455,7 @@ function initializeAIFeatures() {
 
     // Copy response functionality
     if (copyResponseBtn && aiResponseDiv) {
-        copyResponseBtn.addEventListener("click", function() {
+        copyResponseBtn.addEventListener("click", function () {
             const text = aiResponseDiv.textContent
             if (text && text !== "AI responses will appear here...") {
                 navigator.clipboard.writeText(text).then(() => {
@@ -470,7 +470,7 @@ function initializeAIFeatures() {
 
     // Generate PDF functionality
     if (generatePdfBtn && aiResponseDiv) {
-        generatePdfBtn.addEventListener("click", function() {
+        generatePdfBtn.addEventListener("click", function () {
             const content = aiResponseDiv.textContent
             if (content && content !== "AI responses will appear here...") {
                 generatePDF(content)
@@ -588,42 +588,42 @@ function openTemplatePickerAndGenerate(meetingIndex) {
     // Validar API e preparar resposta
     const aiResponseDiv = ensureAiResponseContainer()
     aiResponseDiv.textContent = 'Preparando…'
-    
+
     chrome.storage.sync.get(['geminiApiKey', 'geminiModel'], (cfg) => {
         if (!cfg || !cfg.geminiApiKey) {
             alert('Configure sua chave da API Gemini no popup da extensão.')
             aiResponseDiv.textContent = 'API não configurada.'
             return
         }
-        
+
         loadAllTemplatesWithFallback().then((templates) => {
-            if (!templates.length) { 
-                alert('Nenhum template salvo. Crie um template primeiro.') 
-                return 
+            if (!templates.length) {
+                alert('Nenhum template salvo. Crie um template primeiro.')
+                return
             }
-            
-            const names = templates.map((t, i) => `${i+1}. ${t.name}`).join('\n')
+
+            const names = templates.map((t, i) => `${i + 1}. ${t.name}`).join('\n')
             const pick = prompt('Escolha um template pelo número:\n' + names)
             const idx = pick ? (parseInt(pick, 10) - 1) : -1
             if (idx < 0 || idx >= templates.length) return
-            
+
             const selected = templates[idx]
             aiResponseDiv.textContent = 'Gerando resumo…'
-            
+
             // Obter dados específicos da reunião pelo índice
-            chrome.storage.local.get(['meetings'], function(resultLocal) {
+            chrome.storage.local.get(['meetings'], function (resultLocal) {
                 const meetings = resultLocal.meetings || []
                 if (meetingIndex >= meetings.length) {
                     aiResponseDiv.textContent = 'Reunião não encontrada.'
                     return
                 }
-                
+
                 const meeting = meetings[meetingIndex]
                 if (!meeting || !meeting.transcript || meeting.transcript.length === 0) {
                     aiResponseDiv.textContent = 'Esta reunião não possui transcrição disponível.'
                     return
                 }
-                
+
                 // Preparar dados da reunião específica
                 const meetingData = {
                     title: meeting.meetingTitle || meeting.title || 'Reunião do Google Meet',
@@ -632,7 +632,7 @@ function openTemplatePickerAndGenerate(meetingIndex) {
                     participants: [...new Set(meeting.transcript.map(t => t.personName))].join(', '),
                     transcript: meeting.transcript.map(t => `${t.personName}: ${t.transcriptText}`).join('\n')
                 }
-                
+
                 // Gerar prompt com template e dados da reunião
                 const prompt = `Usando este template HTML: ${selected.content}
 
@@ -655,7 +655,7 @@ INSTRUÇÕES:
 5. Substitua {{duration}} por: ${meetingData.duration} (se usado no template)
 6. Mantenha toda a formatação HTML do template
 7. Retorne apenas o HTML final processado, sem explicações adicionais`
-                
+
                 executePrompt(prompt)
                 window.scrollTo({ top: aiResponseDiv.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' })
             })
@@ -699,25 +699,25 @@ function escapeHtml(text) {
 async function getCurrentMeetingData() {
     return new Promise((resolve) => {
         // Try to get current meeting data from the extension
-        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             const currentTab = tabs[0]
             if (currentTab && currentTab.url && currentTab.url.includes('meet.google.com')) {
                 // Get the latest meeting data
-                chrome.storage.local.get(null, function(items) {
+                chrome.storage.local.get(null, function (items) {
                     const meetings = Object.keys(items)
                         .filter(key => key.startsWith('meeting_'))
                         .map(key => items[key])
                         .sort((a, b) => new Date(b.meetingStartTimestamp) - new Date(a.meetingStartTimestamp))
-                    
+
                     if (meetings.length > 0) {
                         const latestMeeting = meetings[0]
                         resolve({
                             title: latestMeeting.meetingTitle || "Current Meeting",
                             date: new Date().toLocaleDateString('pt-BR'),
-                            participants: latestMeeting.transcript ? 
-                                [...new Set(latestMeeting.transcript.map(t => t.personName))].join(", ") : 
+                            participants: latestMeeting.transcript ?
+                                [...new Set(latestMeeting.transcript.map(t => t.personName))].join(", ") :
                                 "Unknown",
-                            transcript: latestMeeting.transcript ? 
+                            transcript: latestMeeting.transcript ?
                                 latestMeeting.transcript.map(t => `${t.personName}: ${t.transcriptText}`).join("\n") :
                                 "No transcript available"
                         })
@@ -735,11 +735,11 @@ async function getCurrentMeetingData() {
 async function executePrompt(prompt) {
     const aiResponseDiv = document.querySelector("#ai-response") || ensureAiResponseContainer()
     const executeBtn = document.querySelector("#execute-custom-prompt")
-    
+
     if (!aiResponseDiv) return
 
     // Check if API key is configured
-    chrome.storage.sync.get(["geminiApiKey", "geminiModel"], async function(result) {
+    chrome.storage.sync.get(["geminiApiKey", "geminiModel"], async function (result) {
         if (!result.geminiApiKey) {
             aiResponseDiv.textContent = "Por favor, configure sua chave da API Gemini no popup da extensão primeiro."
             return
@@ -753,7 +753,7 @@ async function executePrompt(prompt) {
 
             // Get current meeting transcript for context
             const meetingData = await getCurrentMeetingData()
-            const contextualPrompt = meetingData 
+            const contextualPrompt = meetingData
                 ? `Contexto: Transcrição da reunião atual: ${meetingData.transcript}\n\nSolicitação do usuário: ${prompt}`
                 : prompt
 
@@ -795,14 +795,14 @@ async function generatePDF(content) {
             .replace(/```html\s*/g, '')
             .replace(/```\s*/g, '')
             .trim()
-        
+
         // Verificar se o conteúdo já é HTML ou se é texto simples
         const isHtmlContent = cleanContent.trim().startsWith('<') || cleanContent.includes('<html')
-        
+
         let htmlContent
         if (isHtmlContent) {
             // Se já é HTML, usar diretamente mas adicionar estilos de impressão
-            htmlContent = cleanContent.includes('</head>') 
+            htmlContent = cleanContent.includes('</head>')
                 ? cleanContent.replace(
                     '</head>',
                     `<style>
@@ -883,18 +883,18 @@ async function generatePDF(content) {
         // Criar um blob do HTML e usar download direto
         const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
         const url = URL.createObjectURL(blob)
-        
+
         // Criar um link de download temporário
         const a = document.createElement('a')
         a.href = url
         a.download = `resumo-reuniao-${new Date().toISOString().split('T')[0]}.html`
         a.style.display = 'none'
-        
+
         // Adicionar ao DOM, clicar e remover
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
-        
+
         // Limpar a URL do blob
         setTimeout(() => {
             URL.revokeObjectURL(url)

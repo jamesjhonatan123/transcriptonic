@@ -53,11 +53,11 @@ let aiAssistantButton = null
 let aiAssistantPanel = null
 
 function createAIAssistant() {
-    // Create floating AI assistant button
-    aiAssistantButton = document.createElement('div')
-    aiAssistantButton.id = 'transcriptonic-ai-assistant'
-    aiAssistantButton.innerHTML = '🤖'
-    aiAssistantButton.style.cssText = `
+  // Create floating AI assistant button
+  aiAssistantButton = document.createElement('div')
+  aiAssistantButton.id = 'transcriptonic-ai-assistant'
+  aiAssistantButton.innerHTML = '🤖'
+  aiAssistantButton.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
@@ -74,28 +74,28 @@ function createAIAssistant() {
         box-shadow: 0 4px 12px rgba(42, 154, 202, 0.3);
         transition: all 0.3s ease;
     `
-    
-    aiAssistantButton.addEventListener('click', toggleAIPanel)
-    aiAssistantButton.addEventListener('mouseenter', () => {
-        aiAssistantButton.style.transform = 'scale(1.1)'
-    })
-    aiAssistantButton.addEventListener('mouseleave', () => {
-        aiAssistantButton.style.transform = 'scale(1)'
-    })
-    
-    document.body.appendChild(aiAssistantButton)
-    
-    // Create AI assistant panel
-    createAIPanel()
-    
-    // Update transcript status periodically
-    setInterval(updateTranscriptStatus, 2000)
+
+  aiAssistantButton.addEventListener('click', toggleAIPanel)
+  aiAssistantButton.addEventListener('mouseenter', () => {
+    aiAssistantButton.style.transform = 'scale(1.1)'
+  })
+  aiAssistantButton.addEventListener('mouseleave', () => {
+    aiAssistantButton.style.transform = 'scale(1)'
+  })
+
+  document.body.appendChild(aiAssistantButton)
+
+  // Create AI assistant panel
+  createAIPanel()
+
+  // Update transcript status periodically
+  setInterval(updateTranscriptStatus, 2000)
 }
 
 function createAIPanel() {
-    aiAssistantPanel = document.createElement('div')
-    aiAssistantPanel.id = 'transcriptonic-ai-panel'
-    aiAssistantPanel.style.cssText = `
+  aiAssistantPanel = document.createElement('div')
+  aiAssistantPanel.id = 'transcriptonic-ai-panel'
+  aiAssistantPanel.style.cssText = `
         position: fixed;
         top: 80px;
         right: 20px;
@@ -112,8 +112,8 @@ function createAIPanel() {
         font-family: "SUSE", sans-serif;
         color: #C0C0C0;
     `
-    
-    aiAssistantPanel.innerHTML = `
+
+  aiAssistantPanel.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0; color: #2A9ACA;">Assistente IA</h3>
             <button id="close-ai-panel" style="background: none; border: none; color: #C0C0C0; font-size: 18px; cursor: pointer;">✕</button>
@@ -150,179 +150,179 @@ function createAIPanel() {
             </div>
         </div>
     `
-    
-    document.body.appendChild(aiAssistantPanel)
-    
-    // Add event listeners
-    setupAIPanelListeners()
+
+  document.body.appendChild(aiAssistantPanel)
+
+  // Add event listeners
+  setupAIPanelListeners()
 }
 
 function setupAIPanelListeners() {
-    // Close panel
-    document.getElementById('close-ai-panel')?.addEventListener('click', () => {
-        aiAssistantPanel.style.display = 'none'
+  // Close panel
+  document.getElementById('close-ai-panel')?.addEventListener('click', () => {
+    aiAssistantPanel.style.display = 'none'
+  })
+
+  // Quick prompt buttons
+  document.querySelectorAll('.ai-quick-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const prompt = this.dataset.prompt
+      executeAIPromptInMeeting(prompt)
     })
-    
-    // Quick prompt buttons
-    document.querySelectorAll('.ai-quick-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const prompt = this.dataset.prompt
-            executeAIPromptInMeeting(prompt)
-        })
-    })
-    
-    // Custom prompt execution
-    document.getElementById('execute-ai-prompt')?.addEventListener('click', () => {
-        const customPrompt = document.getElementById('custom-ai-prompt')?.value.trim()
-        if (customPrompt) {
-            executeAIPromptInMeeting(customPrompt)
-        }
-    })
-    
-    // Copy response
-    document.getElementById('copy-ai-response')?.addEventListener('click', () => {
-        const responseText = document.getElementById('ai-response-panel')?.textContent
-        if (responseText && responseText !== 'As respostas da IA aparecerão aqui...') {
-            navigator.clipboard.writeText(responseText)
-            const btn = document.getElementById('copy-ai-response')
-            if (btn) {
-                btn.textContent = '✓ Copiado!'
-                setTimeout(() => {
-                    btn.textContent = '📋 Copiar'
-                }, 2000)
-            }
-        }
-    })
-    
-    // Clear response
-    document.getElementById('clear-ai-response')?.addEventListener('click', () => {
-        const responseDiv = document.getElementById('ai-response-panel')
-        if (responseDiv) {
-            responseDiv.textContent = 'As respostas da IA aparecerão aqui...'
-        }
-        const customPrompt = document.getElementById('custom-ai-prompt')
-        if (customPrompt) {
-            customPrompt.value = ''
-        }
-    })
+  })
+
+  // Custom prompt execution
+  document.getElementById('execute-ai-prompt')?.addEventListener('click', () => {
+    const customPrompt = document.getElementById('custom-ai-prompt')?.value.trim()
+    if (customPrompt) {
+      executeAIPromptInMeeting(customPrompt)
+    }
+  })
+
+  // Copy response
+  document.getElementById('copy-ai-response')?.addEventListener('click', () => {
+    const responseText = document.getElementById('ai-response-panel')?.textContent
+    if (responseText && responseText !== 'As respostas da IA aparecerão aqui...') {
+      navigator.clipboard.writeText(responseText)
+      const btn = document.getElementById('copy-ai-response')
+      if (btn) {
+        btn.textContent = '✓ Copiado!'
+        setTimeout(() => {
+          btn.textContent = '📋 Copiar'
+        }, 2000)
+      }
+    }
+  })
+
+  // Clear response
+  document.getElementById('clear-ai-response')?.addEventListener('click', () => {
+    const responseDiv = document.getElementById('ai-response-panel')
+    if (responseDiv) {
+      responseDiv.textContent = 'As respostas da IA aparecerão aqui...'
+    }
+    const customPrompt = document.getElementById('custom-ai-prompt')
+    if (customPrompt) {
+      customPrompt.value = ''
+    }
+  })
 }
 
 function toggleAIPanel() {
-    if (aiAssistantPanel) {
-        aiAssistantPanel.style.display = aiAssistantPanel.style.display === 'none' ? 'block' : 'none'
-        // Update status when panel is opened
-        if (aiAssistantPanel.style.display === 'block') {
-            updateTranscriptStatus()
-        }
+  if (aiAssistantPanel) {
+    aiAssistantPanel.style.display = aiAssistantPanel.style.display === 'none' ? 'block' : 'none'
+    // Update status when panel is opened
+    if (aiAssistantPanel.style.display === 'block') {
+      updateTranscriptStatus()
     }
+  }
 }
 
 function updateTranscriptStatus() {
-    const statusDiv = document.getElementById('transcript-status-indicator')
-    if (!statusDiv) return
-    
-    const transcriptLength = transcript.length
-    const isActiveTranscript = transcriptTextBuffer.length > 0
-    const lastActivity = transcriptLength > 0 ? new Date(transcript[transcript.length - 1].timestamp) : null
-    
-    let statusMessage = ''
-    let statusColor = '#a0a0a0'
-    
-    if (isActiveTranscript) {
-        statusMessage = `🟢 Transcrevendo ao vivo... (${transcriptLength} blocos)`
-        statusColor = '#28a745'
-    } else if (transcriptLength > 0) {
-        const timeSinceLastActivity = lastActivity ? Math.floor((Date.now() - lastActivity.getTime()) / 1000) : 0
-        if (timeSinceLastActivity < 30) {
-            statusMessage = `🟡 Transcrição pausada (${transcriptLength} blocos)`
-            statusColor = '#ffc107'
-        } else {
-            statusMessage = `📝 ${transcriptLength} blocos capturados`
-            statusColor = '#2A9ACA'
-        }
+  const statusDiv = document.getElementById('transcript-status-indicator')
+  if (!statusDiv) return
+
+  const transcriptLength = transcript.length
+  const isActiveTranscript = transcriptTextBuffer.length > 0
+  const lastActivity = transcriptLength > 0 ? new Date(transcript[transcript.length - 1].timestamp) : null
+
+  let statusMessage = ''
+  let statusColor = '#a0a0a0'
+
+  if (isActiveTranscript) {
+    statusMessage = `🟢 Transcrevendo ao vivo... (${transcriptLength} blocos)`
+    statusColor = '#28a745'
+  } else if (transcriptLength > 0) {
+    const timeSinceLastActivity = lastActivity ? Math.floor((Date.now() - lastActivity.getTime()) / 1000) : 0
+    if (timeSinceLastActivity < 30) {
+      statusMessage = `🟡 Transcrição pausada (${transcriptLength} blocos)`
+      statusColor = '#ffc107'
     } else {
-        statusMessage = '⏳ Aguardando transcrição...'
-        statusColor = '#a0a0a0'
+      statusMessage = `📝 ${transcriptLength} blocos capturados`
+      statusColor = '#2A9ACA'
     }
-    
-    statusDiv.innerHTML = statusMessage
-    statusDiv.style.color = statusColor
+  } else {
+    statusMessage = '⏳ Aguardando transcrição...'
+    statusColor = '#a0a0a0'
+  }
+
+  statusDiv.innerHTML = statusMessage
+  statusDiv.style.color = statusColor
 }
 
 async function executeAIPromptInMeeting(prompt) {
-    const responseDiv = document.getElementById('ai-response-panel')
-    const executeBtn = document.getElementById('execute-ai-prompt')
-    
-    if (!responseDiv) return
-    
-    // Get API key from storage
-    chrome.storage.sync.get(['geminiApiKey', 'geminiModel'], async function(result) {
-        if (!result.geminiApiKey) {
-            responseDiv.textContent = 'Por favor, configure sua chave da API Gemini no popup da extensão primeiro.'
-            return
-        }
-        
-        const model = result.geminiModel || 'gemini-2.5-flash'
-        
-        try {
-            responseDiv.textContent = 'Gerando resposta...'
-            if (executeBtn) executeBtn.disabled = true
-            
-            // Get current meeting context
-            const currentTranscript = transcript.map(t => `${t.personName}: ${t.transcriptText}`).join('\n')
-            
-            // Show context status to user
-            const contextStatus = currentTranscript 
-                ? `📝 Contexto disponível: ${transcript.length} blocos de transcrição`
-                : '⚠️ Nenhuma transcrição disponível ainda'
-            
-            responseDiv.innerHTML = `
+  const responseDiv = document.getElementById('ai-response-panel')
+  const executeBtn = document.getElementById('execute-ai-prompt')
+
+  if (!responseDiv) return
+
+  // Get API key from storage
+  chrome.storage.sync.get(['geminiApiKey', 'geminiModel'], async function (result) {
+    if (!result.geminiApiKey) {
+      responseDiv.textContent = 'Por favor, configure sua chave da API Gemini no popup da extensão primeiro.'
+      return
+    }
+
+    const model = result.geminiModel || 'gemini-2.5-flash'
+
+    try {
+      responseDiv.textContent = 'Gerando resposta...'
+      if (executeBtn) executeBtn.disabled = true
+
+      // Get current meeting context
+      const currentTranscript = transcript.map(t => `${t.personName}: ${t.transcriptText}`).join('\n')
+
+      // Show context status to user
+      const contextStatus = currentTranscript
+        ? `📝 Contexto disponível: ${transcript.length} blocos de transcrição`
+        : '⚠️ Nenhuma transcrição disponível ainda'
+
+      responseDiv.innerHTML = `
                 <div style="background: rgba(42, 154, 202, 0.1); padding: 8px; border-radius: 4px; margin-bottom: 8px; font-size: 12px;">
                     ${contextStatus}
                 </div>
                 <div>Gerando resposta...</div>
             `
-            
-            const contextualPrompt = currentTranscript 
-                ? `Contexto: Transcrição atual da reunião:\n${currentTranscript}\n\nSolicitação do usuário: ${prompt}`
-                : `Solicitação do usuário: ${prompt}\n\nNota: Ainda não há transcrição disponível para esta reunião.`
-            
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${result.geminiApiKey}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: contextualPrompt
-                        }]
-                    }]
-                })
-            })
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-            }
-            
-            const data = await response.json()
-            const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nenhuma resposta gerada'
-            
-            // Show context status and response
-            responseDiv.innerHTML = `
+
+      const contextualPrompt = currentTranscript
+        ? `Contexto: Transcrição atual da reunião:\n${currentTranscript}\n\nSolicitação do usuário: ${prompt}`
+        : `Solicitação do usuário: ${prompt}\n\nNota: Ainda não há transcrição disponível para esta reunião.`
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${result.geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: contextualPrompt
+            }]
+          }]
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Nenhuma resposta gerada'
+
+      // Show context status and response
+      responseDiv.innerHTML = `
                 <div style="background: rgba(42, 154, 202, 0.1); padding: 8px; border-radius: 4px; margin-bottom: 8px; font-size: 12px;">
                     ${contextStatus}
                 </div>
                 <div style="white-space: pre-wrap;">${aiResponse}</div>
             `
-            
-        } catch (error) {
-            console.error('Falha na requisição AI:', error)
-            responseDiv.textContent = `Erro: ${error.message}`
-        } finally {
-            if (executeBtn) executeBtn.disabled = false
-        }
-    })
+
+    } catch (error) {
+      console.error('Falha na requisição AI:', error)
+      responseDiv.textContent = `Erro: ${error.message}`
+    } finally {
+      if (executeBtn) executeBtn.disabled = false
+    }
+  })
 }
 
 
@@ -433,9 +433,9 @@ function meetingRoutines(uiType) {
     hasMeetingStarted = true
 
 
-    //*********** MEETING START ROUTINES **********//
-    // Initialize AI Assistant if API key configured
-    chrome.storage.sync.get(['geminiApiKey'], function(result) {
+  //*********** MEETING START ROUTINES **********//
+  // Initialize AI Assistant if API key configured
+  chrome.storage.sync.get(['geminiApiKey'], function (result) {
       createAIAssistant()
       // Show initial status based on API key availability
       setTimeout(() => {
@@ -448,8 +448,8 @@ function meetingRoutines(uiType) {
           }
         }
       }, 1000)
-    })
-    // Update title (delayed to allow Meet to set it)
+  })
+  // Update title (delayed to allow Meet to set it)
     setTimeout(() => updateMeetingTitle(), 5000)
 
     /** @type {MutationObserver} */
@@ -761,7 +761,7 @@ function pushBufferToTranscript() {
     "transcriptText": transcriptTextBuffer
   })
   overWriteChromeStorage(["transcript"], false)
-  
+
   // Update AI panel status if it exists
   if (aiAssistantPanel) {
     updateTranscriptStatus()
