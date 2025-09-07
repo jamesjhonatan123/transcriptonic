@@ -176,6 +176,106 @@
 
       <div class="get-started">
         <h3 style="margin-top: 0; color: #2a9aca">🤖 Recursos de IA</h3>
+        <div
+          style="
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border: 1px dashed #2a9aca33;
+            border-radius: 6px;
+          "
+        >
+          <label style="display: block; margin-bottom: 0.5rem"
+            ><b>Botão flutuante do assistente</b>
+            <span class="sub-text">(aparece no Google Meet)</span></label
+          >
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              align-items: center;
+              flex-wrap: wrap;
+            "
+          >
+            <select
+              id="assistant-icon-type"
+              style="
+                padding: 0.35rem 0.5rem;
+                border: 1px solid #a0a0a0;
+                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.1);
+                color: #c0c0c0;
+              "
+            >
+              <option value="emoji">Emoji</option>
+              <option value="image">Imagem</option>
+            </select>
+            <input
+              id="assistant-emoji"
+              type="text"
+              maxlength="4"
+              placeholder="🤖"
+              title="Emoji"
+              style="
+                width: 70px;
+                text-align: center;
+                padding: 0.35rem;
+                border: 1px solid #a0a0a0;
+                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.1);
+                color: #c0c0c0;
+              "
+            />
+            <input
+              id="assistant-image"
+              type="file"
+              accept="image/*"
+              style="display: none"
+            />
+            <button
+              id="choose-image"
+              style="
+                border: 1px solid #2a9aca;
+                color: #2a9aca;
+                padding: 0.35rem 0.6rem;
+                border-radius: 4px;
+              "
+            >
+              Escolher imagem
+            </button>
+            <div
+              id="assistant-preview"
+              style="
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                overflow: hidden;
+                border: 1px solid #2a9aca;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(42, 154, 202, 0.1);
+              "
+            >
+              <span style="font-size: 20px">🤖</span>
+            </div>
+            <button
+              id="save-assistant-icon"
+              style="
+                margin-left: auto;
+                background: #2a9aca;
+                color: #fff;
+                padding: 0.35rem 0.8rem;
+                border-radius: 4px;
+              "
+            >
+              Salvar
+            </button>
+          </div>
+          <div class="sub-text" style="margin-top: 0.5rem; font-size: 0.85rem">
+            Dica: você pode arrastar o botão durante a reunião e a posição fica
+            salva.
+          </div>
+        </div>
         <div style="margin-bottom: 1rem">
           <label
             for="gemini-api-key"

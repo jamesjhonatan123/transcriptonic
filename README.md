@@ -3,7 +3,9 @@
 Simple Google Meet transcripts. Private and open source.
 
 ## Features
+
 ### Core Functionality
+
 - **Auto mode**: Get transcripts of all meetings automatically
 - **Manual mode**: Switch on transcript as needed using the CC icon in Google Meet
 - **Webhook integration**: Integrate with your favorite tools
@@ -11,6 +13,7 @@ Simple Google Meet transcripts. Private and open source.
 <!-- Fork note: PT-BR customizations and AI enhancements included in this fork -->
 
 ### 🤖 AI-Powered Features
+
 - **Gemini API Integration**: Secure API key storage and testing
 - **AI Templates**: Create custom HTML templates for AI-generated summaries
 - **Quick Prompts**: Instant AI actions during meetings:
@@ -25,17 +28,21 @@ Simple Google Meet transcripts. Private and open source.
 ## Setup
 
 ### Basic Setup
+
 1. Install the extension
 2. Choose between Auto or Manual mode
 3. Start your Google Meet session
 
 ### AI Features Setup
+
 1. **Get a Gemini API Key**:
+
    - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
    - Create a new API key
    - Copy the key
 
 2. **Configure the Extension**:
+
    - Click the extension icon
    - Paste your Gemini API key
    - Click "Test" to verify it works
@@ -52,6 +59,7 @@ Simple Google Meet transcripts. Private and open source.
 ## Using AI Features
 
 ### During a Meeting
+
 - A floating 🤖 button appears in the top-right corner
 - Click it to open the AI Assistant panel
 - Use Quick Actions for common tasks:
@@ -62,6 +70,7 @@ Simple Google Meet transcripts. Private and open source.
 - Or use the Custom Prompt field for specific requests
 
 ### After a Meeting
+
 - Go to "Last 10 meetings" page
 - Use the AI Templates section to generate formatted summaries
 - Use Quick Prompts for detailed analysis
@@ -70,11 +79,13 @@ Simple Google Meet transcripts. Private and open source.
 ## Templates
 
 The extension comes with 3 default templates:
+
 - **Executive Summary**: Professional summary format
 - **Meeting Minutes**: Traditional meeting minutes layout
 - **Project Update**: Project-focused update format
 
 You can create your own templates using HTML and these placeholders:
+
 - `{{summary}}` - AI-generated content
 - `{{date}}` - Meeting date
 - `{{participants}}` - Participant list

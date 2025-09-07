@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teste de Templates - TranscripTonic</title>
+    <style>
+      body {
+        font-family: "SUSE", sans-serif;
+        background: #1a1a1a;
+        color: #c0c0c0;
+        margin: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #2a2a2a;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .form-field {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #e0e0e0;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #a0a0a0;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #c0c0c0;
+        font-family: inherit;
+      }
+      button {
+        background: #4a90e2;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 10px;
+      }
+      button:hover {
+        background: #357abd;
+      }
+      .template-item {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid #3a3a3a;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+      }
+      .template-name {
+        font-weight: bold;
+        color: #e0e0e0;
+        margin-bottom: 5px;
+      }
+      .debug {
+        background: #333;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Teste de Funcionalidade de Templates</h1>
+
+      <div class="form-field">
+        <label for="template-name">Nome do Template</label>
+        <input type="text" id="template-name" placeholder="ex.: Teste Local" />
+      </div>
+
+      <div class="form-field">
+        <label for="template-content">Conteúdo do Template</label>
+        <textarea
+          id="template-content"
+          rows="4"
+          placeholder="<h2>{{summary}}</h2><p>Data: {{date}}</p>"
+        ></textarea>
+      </div>
+
+      <button id="save-template">Salvar Template</button>
+      <button id="load-templates">Carregar Templates</button>
+      <button id="clear-storage">Limpar Storage</button>
+
+      <hr style="margin: 20px 0" />
+
+      <h2>Templates Salvos</h2>
+      <div id="templates-list">
+        <!-- Templates aparecerão aqui -->
+      </div>
+
+      <div id="debug-info" class="debug"></div>
+    </div>
+
+    <script>
+      // Simular chrome.storage.sync para teste local
+      const mockStorage = {
+        data: JSON.parse(
+          localStorage.getItem("transcriptonic-templates") || "{}"
+        ),
+        sync: {
+          get: function (keys, callback) {
+            console.log("📖 Mock storage GET:", keys);
+            const result = {};
+            if (Array.isArray(keys)) {
+              keys.forEach((key) => {
+                result[key] = this.data[key];
+              });
+            } else if (typeof keys === "string") {
+              result[keys] = this.data[keys];
+            } else if (keys === null) {
+              Object.assign(result, this.data);
+            }
+            console.log("📖 Mock storage GET result:", result);
+            callback(result);
+          },
+          set: function (items, callback) {
+            console.log("💾 Mock storage SET:", items);
+            Object.assign(this.data, items);
+            localStorage.setItem(
+              "transcriptonic-templates",
+              JSON.stringify(this.data)
+            );
+            console.log("💾 Mock storage SET complete, data:", this.data);
+            if (callback) callback();
+          },
+        },
+      };
+
+      // Usar mock storage se chrome.storage não estiver disponível
+      const storage =
+        typeof chrome !== "undefined" && chrome.storage
+          ? chrome.storage
+          : mockStorage;
+
+      function debugLog(message) {
+        const debugDiv = document.getElementById("debug-info");
+        const timestamp = new Date().toLocaleTimeString();
+        debugDiv.textContent += `[${timestamp}] ${message}\n`;
+        debugDiv.scrollTop = debugDiv.scrollHeight;
+      }
+
+      function saveTemplate() {
+        debugLog("🔄 Iniciando salvamento de template...");
+
+        const nameInput = document.getElementById("template-name");
+        const contentInput = document.getElementById("template-content");
+
+        const name = nameInput.value.trim();
+        const content = contentInput.value.trim();
+
+        debugLog(`📝 Nome: "${name}", Conteúdo length: ${content.length}`);
+
+        if (!name || !content) {
+          alert("Por favor, preencha nome e conteúdo do template.");
+          debugLog("❌ Validação falhou - campos vazios");
+          return;
+        }
+
+        // Carregar templates existentes
+        storage.sync.get(["savedTemplates"], function (result) {
+          debugLog("📖 Templates existentes carregados");
+
+          const savedTemplates = result.savedTemplates || [];
+          debugLog(`📊 Templates existentes: ${savedTemplates.length}`);
+
+          // Verificar se já existe template com mesmo nome
+          const existingIndex = savedTemplates.findIndex(
+            (t) => t.name === name
+          );
+          if (existingIndex !== -1) {
+            if (
+              !confirm(
+                "Já existe um template com este nome. Deseja substituir?"
+              )
+            ) {
+              debugLog("❌ Usuário cancelou substituição");
+              return;
+            }
+            savedTemplates[existingIndex] = { name, content };
+            debugLog("🔄 Template existente substituído");
+          } else {
+            savedTemplates.push({ name, content });
+            debugLog("➕ Novo template adicionado");
+          }
+
+          // Salvar templates atualizados
+          storage.sync.set({ savedTemplates }, function () {
+            debugLog("💾 Templates salvos no storage");
+            nameInput.value = "";
+            contentInput.value = "";
+            alert("Template salvo com sucesso!");
+
+            // Recarregar lista
+            setTimeout(() => {
+              debugLog("🔄 Recarregando lista de templates...");
+              loadTemplates();
+            }, 100);
+          });
+        });
+      }
+
+      function loadTemplates() {
+        debugLog("🔄 Carregando templates...");
+
+        storage.sync.get(["savedTemplates"], function (result) {
+          const savedTemplates = result.savedTemplates || [];
+          debugLog(`📊 Templates carregados: ${savedTemplates.length}`);
+
+          const templatesListDiv = document.getElementById("templates-list");
+
+          if (savedTemplates.length === 0) {
+            templatesListDiv.innerHTML =
+              '<p style="color: #808080; font-style: italic;">Nenhum template salvo ainda.</p>';
+            debugLog("📋 Lista vazia exibida");
+            return;
+          }
+
+          let html = "";
+          savedTemplates.forEach((template, index) => {
+            html += `
+                        <div class="template-item">
+                            <div class="template-name">${template.name}</div>
+                            <div style="font-size: 12px; color: #808080; margin-top: 5px;">
+                                ${template.content.substring(0, 100)}${
+              template.content.length > 100 ? "..." : ""
+            }
+                            </div>
+                            <button onclick="deleteTemplate(${index})" style="background: #D32F2F; margin-top: 5px;">
+                                Excluir
+                            </button>
+                        </div>
+                    `;
+          });
+
+          templatesListDiv.innerHTML = html;
+          debugLog(`✅ ${savedTemplates.length} templates renderizados`);
+        });
+      }
+
+      function deleteTemplate(index) {
+        debugLog(`🗑️ Excluindo template index: ${index}`);
+
+        storage.sync.get(["savedTemplates"], function (result) {
+          const savedTemplates = result.savedTemplates || [];
+
+          if (index >= 0 && index < savedTemplates.length) {
+            const templateName = savedTemplates[index].name;
+            savedTemplates.splice(index, 1);
+
+            storage.sync.set({ savedTemplates }, function () {
+              debugLog(`✅ Template "${templateName}" excluído`);
+              loadTemplates();
+            });
+          }
+        });
+      }
+
+      function clearStorage() {
+        if (confirm("Tem certeza que deseja limpar todos os templates?")) {
+          storage.sync.set({ savedTemplates: [] }, function () {
+            debugLog("🧹 Storage limpo");
+            loadTemplates();
+          });
+        }
+      }
+
+      // Event listeners
+      document
+        .getElementById("save-template")
+        .addEventListener("click", saveTemplate);
+      document
+        .getElementById("load-templates")
+        .addEventListener("click", loadTemplates);
+      document
+        .getElementById("clear-storage")
+        .addEventListener("click", clearStorage);
+
+      // Carregar templates na inicialização
+      document.addEventListener("DOMContentLoaded", function () {
+        debugLog("🚀 Página carregada, carregando templates...");
+        loadTemplates();
+      });
+
+      debugLog("🔧 Sistema de teste inicializado");
+    </script>
+  </body>
+</html>

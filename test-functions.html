@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Funções - TranscripTonic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #c0c0c0;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { background: rgba(40, 167, 69, 0.2); border-left: 4px solid #28a745; }
+        .error { background: rgba(220, 53, 69, 0.2); border-left: 4px solid #dc3545; }
+        .info { background: rgba(52, 144, 220, 0.2); border-left: 4px solid #3490dc; }
+        button {
+            background: #2A9ACA;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1f7a9c; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Teste de Funções - TranscripTonic</h1>
+    
+    <div class="test-result info">
+        <strong>Status:</strong> Carregando testes...
+    </div>
+    
+    <div id="test-results"></div>
+    
+    <hr>
+    
+    <h2>Testes Manuais</h2>
+    <button onclick="testEscapeHtml()">Testar escapeHtml</button>
+    <button onclick="testGetCurrentMeetingData()">Testar getCurrentMeetingData</button>
+    <button onclick="testExecutePrompt()">Testar executePrompt</button>
+    
+    <div id="manual-results"></div>
+
+    <script>
+        // Simular ambiente da extensão
+        const mockChrome = {
+            storage: {
+                sync: {
+                    get: (keys, callback) => {
+                        // Simular dados de configuração
+                        callback({
+                            geminiApiKey: 'test-key',
+                            geminiModel: 'gemini-2.5-flash'
+                        });
+                    }
+                },
+                local: {
+                    get: (keys, callback) => {
+                        // Simular dados de reuniões
+                        callback({
+                            meetings: [
+                                {
+                                    meetingTitle: 'Reunião de Teste',
+                                    meetingStartTimestamp: new Date().toISOString(),
+                                    meetingEndTimestamp: new Date(Date.now() + 3600000).toISOString(),
+                                    transcript: [
+                                        { personName: 'João', transcriptText: 'Olá pessoal!' },
+                                        { personName: 'Maria', transcriptText: 'Oi João, como vai?' }
+                                    ]
+                                }
+                            ]
+                        });
+                    }
+                }
+            },
+            tabs: {
+                query: (query, callback) => {
+                    callback([{
+                        url: 'https://meet.google.com/test-meeting'
+                    }]);
+                }
+            },
+            runtime: {
+                lastError: null
+            }
+        };
+
+        // Injetar chrome mock se não existir
+        if (typeof chrome === 'undefined') {
+            window.chrome = mockChrome;
+        }
+
+        function log(message, type = 'info') {
+            const div = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            div.appendChild(resultDiv);
+        }
+
+        function logManual(message, type = 'info') {
+            const div = document.getElementById('manual-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            div.appendChild(resultDiv);
+        }
+
+        // Carregar o script da extensão
+        function loadExtensionScript() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.onload = resolve;
+                script.onerror = reject;
+                script.src = '/home/jonatassantana/transcriptonic/extension/meetings.js';
+                document.head.appendChild(script);
+            });
+        }
+
+        // Testes automáticos
+        async function runTests() {
+            try {
+                log('Iniciando testes de funções...', 'info');
+                
+                // Teste 1: escapeHtml
+                try {
+                    if (typeof escapeHtml === 'function') {
+                        const result = escapeHtml('<script>alert("test")</script>');
+                        log(`✅ escapeHtml: ${result}`, 'success');
+                    } else {
+                        log('❌ escapeHtml: Função não encontrada', 'error');
+                    }
+                } catch (e) {
+                    log(`❌ escapeHtml: ${e.message}`, 'error');
+                }
+
+                // Teste 2: getCurrentMeetingData
+                try {
+                    if (typeof getCurrentMeetingData === 'function') {
+                        log('✅ getCurrentMeetingData: Função encontrada', 'success');
+                    } else {
+                        log('❌ getCurrentMeetingData: Função não encontrada', 'error');
+                    }
+                } catch (e) {
+                    log(`❌ getCurrentMeetingData: ${e.message}`, 'error');
+                }
+
+                // Teste 3: executePrompt
+                try {
+                    if (typeof executePrompt === 'function') {
+                        log('✅ executePrompt: Função encontrada', 'success');
+                    } else {
+                        log('❌ executePrompt: Função não encontrada', 'error');
+                    }
+                } catch (e) {
+                    log(`❌ executePrompt: ${e.message}`, 'error');
+                }
+
+                // Teste 4: generatePDF
+                try {
+                    if (typeof generatePDF === 'function') {
+                        log('✅ generatePDF: Função encontrada', 'success');
+                    } else {
+                        log('❌ generatePDF: Função não encontrada', 'error');
+                    }
+                } catch (e) {
+                    log(`❌ generatePDF: ${e.message}`, 'error');
+                }
+
+                log('Testes automáticos concluídos!', 'success');
+
+            } catch (error) {
+                log(`Erro nos testes: ${error.message}`, 'error');
+            }
+        }
+
+        // Testes manuais
+        function testEscapeHtml() {
+            try {
+                const input = '&lt;script&gt;alert("xss")&lt;/script&gt;';
+                const result = escapeHtml(input);
+                logManual(`escapeHtml teste executado com sucesso`, 'success');
+            } catch (e) {
+                logManual(`Erro no escapeHtml: ${e.message}`, 'error');
+            }
+        }
+
+        function testGetCurrentMeetingData() {
+            try {
+                getCurrentMeetingData().then(data => {
+                    logManual(`getCurrentMeetingData() = ${JSON.stringify(data, null, 2)}`, 'success');
+                }).catch(e => {
+                    logManual(`Erro no getCurrentMeetingData: ${e.message}`, 'error');
+                });
+            } catch (e) {
+                logManual(`Erro no getCurrentMeetingData: ${e.message}`, 'error');
+            }
+        }
+
+        function testExecutePrompt() {
+            try {
+                // Criar um container de resposta mock
+                if (!document.getElementById('ai-response')) {
+                    const div = document.createElement('div');
+                    div.id = 'ai-response';
+                    div.style.display = 'none';
+                    document.body.appendChild(div);
+                }
+
+                executePrompt('Teste de prompt simples');
+                logManual('executePrompt chamado com sucesso (verifique o console para mais detalhes)', 'success');
+            } catch (e) {
+                logManual(`Erro no executePrompt: ${e.message}`, 'error');
+            }
+        }
+
+        // Carregar testes quando a página estiver pronta
+        document.addEventListener('DOMContentLoaded', () => {
+            // Aguardar um pouco para simular carregamento
+            setTimeout(runTests, 1000);
+        });
+    </script>
+
+    <!-- Carregar o script da extensão -->
+    <script src="/home/jonatassantana/transcriptonic/extension/meetings.js" async></script>
+</body>
+</html>

@@ -505,12 +505,13 @@
         }
     ]
 }
-</pre>
-        </code>
+</pre
+                >
+              </code>
             </div>
           </details>
           <hr />
-      <p class="card-heading">Helpful guides</p>
+          <p class="card-heading">Helpful guides</p>
           <div class="integration-card">
             <a
               class="integration-guide"
@@ -611,7 +612,30 @@ Exemplo de template:
 
           <hr />
 
-          <p class="card-heading">Templates Salvos</p>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 6px;
+            "
+          >
+            <p class="card-heading" style="margin: 0">Templates Salvos</p>
+            <button
+              id="restore-default-templates"
+              style="
+                background: #6c757d;
+                color: #fff;
+                border: none;
+                padding: 0.35rem 0.6rem;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+              "
+            >
+              Restaurar padrões
+            </button>
+          </div>
           <div id="templates-list" style="margin-bottom: 1rem">
             <!-- Templates serão carregados aqui -->
           </div>
@@ -623,40 +647,52 @@ Exemplo de template:
           </div>
 
           <div class="form-field">
-            <label>Predefined Prompts</label>
             <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <label>Predefined Prompts</label>
+              <div style="display: flex; gap: 6px">
+                <button
+                  id="qp-manage"
+                  style="
+                    padding: 0.25rem 0.5rem;
+                    background: transparent;
+                    color: #2a9aca;
+                    border: 1px solid #2a9aca;
+                    border-radius: 4px;
+                    font-size: 0.8rem;
+                  "
+                >
+                  Manage
+                </button>
+                <button
+                  id="qp-add"
+                  style="
+                    padding: 0.25rem 0.5rem;
+                    background: #2a9aca;
+                    color: #071f29;
+                    border: none;
+                    border-radius: 4px;
+                    font-size: 0.8rem;
+                  "
+                >
+                  + New
+                </button>
+              </div>
+            </div>
+            <div
+              id="quick-prompts-container"
               style="
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 0.5rem;
                 margin-top: 0.5rem;
               "
-            >
-              <button
-                class="quick-prompt-btn"
-                data-prompt="Generate 5 relevant questions about the topics discussed so far"
-              >
-                📝 Generate Questions
-              </button>
-              <button
-                class="quick-prompt-btn"
-                data-prompt="Summarize the key points discussed in this meeting so far"
-              >
-                📋 Summarize So Far
-              </button>
-              <button
-                class="quick-prompt-btn"
-                data-prompt="List the action items and decisions made in this meeting"
-              >
-                ✅ Action Items
-              </button>
-              <button
-                class="quick-prompt-btn"
-                data-prompt="Identify the main topics and themes discussed"
-              >
-                🎯 Key Topics
-              </button>
-            </div>
+            ></div>
           </div>
 
           <hr />
@@ -747,6 +783,10 @@ Exemplo de template:
       </div>
     </div>
 
+    <!-- Bibliotecas para PDF direto (local, MV3-safe) -->
+    <script src="libs/html2canvas.min.js"></script>
+    <script src="libs/jspdf.umd.min.js"></script>
+    <script src="libs/html2pdf.bundle.min.js"></script>
     <script src="meetings.js"></script>
   </body>
 </html>

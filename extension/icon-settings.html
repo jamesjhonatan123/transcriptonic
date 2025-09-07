@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TranscripTonic • Ícone do Assistente</title>
+    <link rel="icon" href="icon.png" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=SUSE:wght@400;700&display=swap");
+      body {
+        background: #071f29;
+        color: #c0c0c0;
+        font-family: "SUSE", sans-serif;
+        margin: 0;
+      }
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      h1 {
+        color: #2a9aca;
+        margin: 0 0 8px;
+        font-size: 1.6rem;
+      }
+      p {
+        margin: 0 0 16px;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid #2a9aca33;
+        border-radius: 8px;
+        padding: 16px;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .preview {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 1px solid #2a9aca;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(42, 154, 202, 0.1);
+        overflow: hidden;
+      }
+      .btn {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #2a9aca;
+        background: transparent;
+        color: #2a9aca;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn.primary {
+        background: #2a9aca;
+        color: #fff;
+        border-color: #2a9aca;
+      }
+      .hint {
+        color: #a0a0a0;
+        font-size: 0.9rem;
+        margin-top: 8px;
+      }
+      a {
+        color: #2a9aca;
+        font-weight: 700;
+      }
+      input[type="file"] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Ícone do Assistente 🤖</h1>
+      <p>
+        Escolha uma imagem para o botão flutuante. A mudança é salva
+        automaticamente.
+      </p>
+
+      <div class="card">
+        <div class="row" style="margin-bottom: 12px">
+          <div id="assistant-preview" class="preview">
+            <span style="font-size: 28px">🤖</span>
+          </div>
+          <input id="assistant-image" type="file" accept="image/*" />
+          <button id="choose-image" class="btn">Escolher imagem</button>
+          <button id="reset-image" class="btn" title="Voltar para emoji">
+            Usar emoji
+          </button>
+        </div>
+        <div class="hint">
+          Dica: arraste o botão no Meet; a posição fica salva. Esta página pode
+          ser fechada após a seleção.
+        </div>
+      </div>
+
+      <p style="margin-top: 16px">
+        <a href="popup.html" target="_blank">Abrir popup em uma aba</a>
+      </p>
+    </div>
+
+    <script src="icon-settings.js"></script>
+  </body>
+</html>

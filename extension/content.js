@@ -52,47 +52,248 @@ let canUseAriaBasedTranscriptSelector = true
 let aiAssistantButton = null
 let aiAssistantPanel = null
 
+// ===== Quick Actions (dinâmicas) =====
+const QUICK_ACTIONS_KEY = 'aiQuickActions'
+const DEFAULT_QUICK_ACTIONS = [
+  { id: 'q1', icon: '📝', label: 'Perguntas', prompt: 'Gere 5 perguntas relevantes sobre os tópicos discutidos até agora' },
+  { id: 'q2', icon: '📋', label: 'Resumo', prompt: 'Resuma os pontos principais discutidos nesta reunião até agora' },
+  { id: 'q3', icon: '✅', label: 'Ações', prompt: 'Liste os itens de ação e decisões tomadas nesta reunião' },
+  { id: 'q4', icon: '🎯', label: 'Tópicos', prompt: 'Identifique os principais tópicos e temas discutidos' },
+]
+
+function getQuickActions(cb) {
+  chrome.storage.sync.get([QUICK_ACTIONS_KEY], (res) => {
+    let actions = res[QUICK_ACTIONS_KEY]
+    if (!Array.isArray(actions) || actions.length === 0) {
+      actions = DEFAULT_QUICK_ACTIONS
+      chrome.storage.sync.set({ [QUICK_ACTIONS_KEY]: actions }, () => cb(actions))
+    } else {
+      // Migração leve: garantir campo icon opcional
+      actions = actions.map(a => ({ icon: undefined, ...a }))
+      cb(actions)
+    }
+  })
+}
+
+function setQuickActions(actions, cb) {
+  chrome.storage.sync.set({ [QUICK_ACTIONS_KEY]: actions }, () => cb && cb())
+}
+
+function renderQuickActions(manageMode = false) {
+  const container = document.getElementById('ai-quick-actions')
+  if (!container) return
+  getQuickActions((actions) => {
+    if (!actions.length) {
+      container.innerHTML = '<p class="sub-text" style="margin:0;color:#a0a0a0;font-size:12px">Nenhuma ação configurada.</p>'
+      return
+    }
+    container.innerHTML = actions.map(a => `
+      <div class="qa-item" style="position:relative">
+    <button class="ai-quick-btn" data-id="${a.id}" data-prompt="${a.prompt.replace(/&/g, '&amp;').replace(/\"/g, '&quot;')}" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer; width:100%; text-align:left;">${a.icon ? `${a.icon} ` : ''}${a.label}</button>
+        ${manageMode ? `<button class="qa-del" data-id="${a.id}" title="Excluir" style="position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; border:1px solid #a0a0a0; background:#13232b; color:#a0a0a0; cursor:pointer; font-size:12px; line-height:20px;">×</button>` : ''}
+      </div>
+    `).join('')
+  })
+}
+
 function createAIAssistant() {
+  // Prevent duplicates
+  if (document.getElementById('transcriptonic-ai-assistant')) {
+    return
+  }
   // Create floating AI assistant button
   aiAssistantButton = document.createElement('div')
   aiAssistantButton.id = 'transcriptonic-ai-assistant'
-  aiAssistantButton.innerHTML = '🤖'
   aiAssistantButton.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        background: #2A9ACA;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        cursor: pointer;
-        z-index: 10000;
-        box-shadow: 0 4px 12px rgba(42, 154, 202, 0.3);
-        transition: all 0.3s ease;
-    `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: #2A9ACA;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-drag: none;
+  color: #fff;
+  z-index: 2147483647;
+    box-shadow: 0 4px 12px rgba(42, 154, 202, 0.3);
+    transition: transform 0.12s ease;
+    overflow: hidden;
+  `
 
-  aiAssistantButton.addEventListener('click', toggleAIPanel)
+  // Add immediately with default icon so user always sees it
+  aiAssistantButton.textContent = '🤖'
+  document.body.appendChild(aiAssistantButton)
+
+  // Enable hover animation and drag behavior right away
   aiAssistantButton.addEventListener('mouseenter', () => {
-    aiAssistantButton.style.transform = 'scale(1.1)'
+    aiAssistantButton.style.transform = 'scale(1.06)'
   })
   aiAssistantButton.addEventListener('mouseleave', () => {
     aiAssistantButton.style.transform = 'scale(1)'
   })
+  makeAssistantDraggable(aiAssistantButton)
 
-  document.body.appendChild(aiAssistantButton)
+  // Load configuration for icon and position (then refine)
+  chrome.storage.sync.get(['aiAssistantIconType', 'aiAssistantEmoji'], (syncCfg) => {
+    chrome.storage.local.get(['aiAssistantImageDataUrl', 'aiAssistantPosition'], (localCfg) => {
+      const iconType = (syncCfg.aiAssistantIconType === 'image' || syncCfg.aiAssistantIconType === 'emoji') ? syncCfg.aiAssistantIconType : 'emoji'
+      const emoji = syncCfg.aiAssistantEmoji || '🤖'
+      const img = localCfg.aiAssistantImageDataUrl
+      const size = 50
 
-  // Create AI assistant panel
-  createAIPanel()
+      // Apply initial icon
+      applyAssistantIcon(iconType, emoji, img)
 
-  // Update transcript status periodically
-  setInterval(updateTranscriptStatus, 2000)
+      // Restore position if available
+      if (localCfg.aiAssistantPosition && typeof localCfg.aiAssistantPosition.top === 'number' && typeof localCfg.aiAssistantPosition.left === 'number') {
+        // If left is set, clear right to avoid conflicts
+        aiAssistantButton.style.right = 'auto'
+        aiAssistantButton.style.left = Math.max(8, Math.min(window.innerWidth - size - 8, localCfg.aiAssistantPosition.left)) + 'px'
+        aiAssistantButton.style.top = Math.max(8, Math.min(window.innerHeight - size - 8, localCfg.aiAssistantPosition.top)) + 'px'
+      }
+
+      // Listen for settings changes (live update icon)
+      chrome.storage.onChanged.addListener((changes, area) => {
+        if (area === 'sync' && (changes.aiAssistantIconType || changes.aiAssistantEmoji)) {
+          const candType = changes.aiAssistantIconType?.newValue
+          const newType = (candType === 'image' || candType === 'emoji') ? candType : iconType
+          const newEmoji = changes.aiAssistantEmoji?.newValue || emoji
+          chrome.storage.local.get(['aiAssistantImageDataUrl'], (lc) => {
+            applyAssistantIcon(newType, newEmoji, lc.aiAssistantImageDataUrl)
+          })
+        }
+        if (area === 'local' && changes.aiAssistantImageDataUrl) {
+          const typeNow = iconType
+          const emojiNow = emoji
+          applyAssistantIcon(typeNow, emojiNow, changes.aiAssistantImageDataUrl.newValue)
+        }
+      })
+
+      // Create AI assistant panel
+      if (!document.getElementById('transcriptonic-ai-panel')) {
+        createAIPanel()
+      }
+    })
+  })
 }
 
+function applyAssistantIcon(type, emoji, dataUrl) {
+  if (!aiAssistantButton) return
+  if (type === 'image' && dataUrl) {
+    aiAssistantButton.innerHTML = ''
+    const imgEl = document.createElement('img')
+    imgEl.src = dataUrl
+    imgEl.alt = 'AI'
+    imgEl.style.cssText = 'width:100%;height:100%;object-fit:cover;pointer-events:none;'
+    aiAssistantButton.appendChild(imgEl)
+  } else {
+    aiAssistantButton.innerHTML = emoji || '🤖'
+    aiAssistantButton.style.fontSize = '24px'
+  }
+}
+
+function makeAssistantDraggable(el) {
+  let dragging = false
+  let moved = false
+  let startX = 0, startY = 0
+  let startLeft = 0, startTop = 0
+
+  const margin = 8
+  const size = () => el.getBoundingClientRect()
+
+  const onPointerMove = (clientX, clientY) => {
+    const dx = clientX - startX
+    const dy = clientY - startY
+    if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) moved = true
+    if (!dragging) return
+    const rect = size()
+    let newLeft = startLeft + dx
+    let newTop = startTop + dy
+    newLeft = Math.max(margin, Math.min(window.innerWidth - rect.width - margin, newLeft))
+    newTop = Math.max(margin, Math.min(window.innerHeight - rect.height - margin, newTop))
+    el.style.right = 'auto'
+    el.style.left = newLeft + 'px'
+    el.style.top = newTop + 'px'
+  }
+
+  const onPointerUp = (clientX, clientY) => {
+    if (!dragging) return
+    dragging = false
+    el.style.cursor = 'grab'
+    document.removeEventListener('mousemove', mouseMove)
+    document.removeEventListener('mouseup', mouseUp)
+    document.removeEventListener('touchmove', touchMove)
+    document.removeEventListener('touchend', touchEnd)
+
+    // Store position
+    const rect = el.getBoundingClientRect()
+    chrome.storage.local.set({ aiAssistantPosition: { top: rect.top, left: rect.left } })
+
+    // If not moved significantly, treat as click
+    if (!moved) {
+      toggleAIPanel()
+    }
+  }
+
+  const mouseMove = (e) => onPointerMove(e.clientX, e.clientY)
+  const mouseUp = (e) => onPointerUp(e.clientX, e.clientY)
+  const touchMove = (e) => {
+    if (e.touches && e.touches[0]) onPointerMove(e.touches[0].clientX, e.touches[0].clientY)
+  }
+  const touchEnd = (e) => {
+    const t = e.changedTouches && e.changedTouches[0]
+    onPointerUp(t ? t.clientX : 0, t ? t.clientY : 0)
+  }
+
+  el.addEventListener('mousedown', (e) => {
+    dragging = true
+    moved = false
+    startX = e.clientX
+    startY = e.clientY
+    const rect = el.getBoundingClientRect()
+    startLeft = rect.left
+    startTop = rect.top
+    el.style.cursor = 'grabbing'
+    document.addEventListener('mousemove', mouseMove)
+    document.addEventListener('mouseup', mouseUp)
+  })
+
+  el.addEventListener('touchstart', (e) => {
+    const t = e.touches[0]
+    dragging = true
+    moved = false
+    startX = t.clientX
+    startY = t.clientY
+    const rect = el.getBoundingClientRect()
+    startLeft = rect.left
+    startTop = rect.top
+    document.addEventListener('touchmove', touchMove, { passive: false })
+    document.addEventListener('touchend', touchEnd)
+  }, { passive: true })
+
+  // Keep inside viewport on resize
+  window.addEventListener('resize', () => {
+    const rect = el.getBoundingClientRect()
+    const newLeft = Math.max(margin, Math.min(window.innerWidth - rect.width - margin, rect.left))
+    const newTop = Math.max(margin, Math.min(window.innerHeight - rect.height - margin, rect.top))
+    el.style.left = newLeft + 'px'
+    el.style.top = newTop + 'px'
+    el.style.right = 'auto'
+    chrome.storage.local.set({ aiAssistantPosition: { top: newTop, left: newLeft } })
+  })
+} // end makeAssistantDraggable
+
+// Update transcript status periodically
+setInterval(updateTranscriptStatus, 2000)
+
 function createAIPanel() {
+  if (document.getElementById('transcriptonic-ai-panel')) return
   aiAssistantPanel = document.createElement('div')
   aiAssistantPanel.id = 'transcriptonic-ai-panel'
   aiAssistantPanel.style.cssText = `
@@ -124,13 +325,14 @@ function createAIPanel() {
         </div>
         
         <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Ações Rápidas:</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="ai-quick-btn" data-prompt="Gere 5 perguntas relevantes sobre os tópicos discutidos até agora" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📝 Perguntas</button>
-                <button class="ai-quick-btn" data-prompt="Resuma os pontos principais discutidos nesta reunião até agora" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">📋 Resumo</button>
-                <button class="ai-quick-btn" data-prompt="Liste os itens de ação e decisões tomadas nesta reunião" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">✅ Ações</button>
-                <button class="ai-quick-btn" data-prompt="Identifique os principais tópicos e temas discutidos" style="padding: 8px; background: rgba(42, 154, 202, 0.1); border: 1px solid #2A9ACA; border-radius: 6px; color: #C0C0C0; font-size: 12px; cursor: pointer;">🎯 Tópicos</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <label style="font-weight: bold;">Ações Rápidas:</label>
+              <div style="display:flex; gap:6px;">
+                <button id="qa-manage-toggle" style="padding:4px 8px; background: transparent; color:#2A9ACA; border:1px solid #2A9ACA; border-radius:4px; font-size:12px;">Gerenciar</button>
+                <button id="qa-add" title="Adicionar ação" style="padding:4px 8px; background:#2A9ACA; color:#071f29; border:none; border-radius:4px; font-size:12px;">+ Nova</button>
+              </div>
             </div>
+            <div id="ai-quick-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;"></div>
         </div>
         
         <div style="margin-bottom: 15px;">
@@ -163,11 +365,54 @@ function setupAIPanelListeners() {
     aiAssistantPanel.style.display = 'none'
   })
 
-  // Quick prompt buttons
-  document.querySelectorAll('.ai-quick-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const prompt = this.dataset.prompt
-      executeAIPromptInMeeting(prompt)
+  // Render inicial das ações rápidas
+  renderQuickActions(false)
+
+  // Delegação: clique nas ações rápidas
+  const qaContainer = document.getElementById('ai-quick-actions')
+  if (qaContainer) {
+    qaContainer.addEventListener('click', (e) => {
+      const target = /** @type {HTMLElement} */(e.target)
+      // Excluir
+      const delBtn = target.closest('.qa-del')
+      if (delBtn && delBtn instanceof HTMLElement) {
+        const id = delBtn.getAttribute('data-id')
+        if (!id) return
+        getQuickActions((actions) => {
+          const filtered = actions.filter(a => a.id !== id)
+          setQuickActions(filtered, () => renderQuickActions(true))
+        })
+        return
+      }
+      // Executar
+      const btn = target.closest('.ai-quick-btn')
+      if (btn && btn instanceof HTMLElement) {
+        const prompt = btn.getAttribute('data-prompt')
+        if (prompt) executeAIPromptInMeeting(prompt)
+      }
+    })
+  }
+
+  // Toggle gerenciar
+  let manageMode = false
+  document.getElementById('qa-manage-toggle')?.addEventListener('click', () => {
+    manageMode = !manageMode
+    const t = document.getElementById('qa-manage-toggle')
+    if (t) t.textContent = manageMode ? 'Concluir' : 'Gerenciar'
+    renderQuickActions(manageMode)
+  })
+
+  // Adicionar nova ação
+  document.getElementById('qa-add')?.addEventListener('click', () => {
+    const icon = prompt('Ícone (emoji opcional, ex.: 📌). Deixe em branco para nenhum ícone:') || ''
+    const label = prompt('Nome/Label da ação (ex.: Decisões)')
+    if (!label) return
+    const promptText = prompt('Prompt que será enviado para a IA')
+    if (!promptText) return
+    getQuickActions((actions) => {
+      const id = 'qa_' + Math.random().toString(36).slice(2, 8)
+      const next = actions.concat([{ id, icon, label, prompt: promptText }])
+      setQuickActions(next, () => renderQuickActions(manageMode))
     })
   })
 
@@ -433,9 +678,9 @@ function meetingRoutines(uiType) {
     hasMeetingStarted = true
 
 
-  //*********** MEETING START ROUTINES **********//
-  // Initialize AI Assistant if API key configured
-  chrome.storage.sync.get(['geminiApiKey'], function (result) {
+    //*********** MEETING START ROUTINES **********//
+    // Initialize AI Assistant if API key configured
+    chrome.storage.sync.get(['geminiApiKey'], function (result) {
       createAIAssistant()
       // Show initial status based on API key availability
       setTimeout(() => {
@@ -448,8 +693,8 @@ function meetingRoutines(uiType) {
           }
         }
       }, 1000)
-  })
-  // Update title (delayed to allow Meet to set it)
+    })
+    // Update title (delayed to allow Meet to set it)
     setTimeout(() => updateMeetingTitle(), 5000)
 
     /** @type {MutationObserver} */

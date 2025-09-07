@@ -5,6 +5,16 @@
 // ==== Helpers de Templates (definidos antes de qualquer uso) ====
 const TEMPLATE_STORAGE_KEY = 'aiTemplatesV2'
 const TEMPLATE_MAX_LEN = 80 * 1024 // ~80KB por item (aprox.)
+const QUICK_ACTIONS_KEY = 'aiQuickActions'
+const DEFAULT_QUICK_ACTIONS = [
+    { id: 'q1', icon: '📝', label: 'Generate Questions', prompt: 'Generate 5 relevant questions about the topics discussed so far' },
+    { id: 'q2', icon: '📋', label: 'Summarize So Far', prompt: 'Summarize the key points discussed in this meeting so far' },
+    { id: 'q3', icon: '✅', label: 'Action Items', prompt: 'List the action items and decisions made in this meeting' },
+    { id: 'q4', icon: '🎯', label: 'Key Topics', prompt: 'Identify the main topics and themes discussed' },
+]
+
+// Índice da reunião para a qual estamos gerando o resumo via tabela (para salvar e trocar o botão)
+let currentGeneratingMeetingIndex = null
 
 function getTemplateStore() {
     // Usar local para evitar limites do sync
@@ -217,6 +227,10 @@ function loadMeetings() {
                     const meeting = resultLocal.meetings[i]
                     const timestamp = new Date(meeting.meetingStartTimestamp).toLocaleString()
                     const durationString = getDuration(meeting.meetingStartTimestamp, meeting.meetingEndTimestamp)
+                    const hasSummary = !!meeting.aiSummaryHtml
+                    const actionBtnHtml = hasSummary
+                        ? `<button class="download-pdf-button" data-download-pdf data-index="${i}" style="background:#2A9ACA;color:white;border:none;padding:0.35rem 0.75rem;border-radius:4px;font-weight:bold;cursor:pointer;font-size:12px;">Baixar PDF</button>`
+                        : `<button class="generate-summary-button" data-generate data-index="${i}" style="background:#2A9ACA;color:white;border:none;padding:0.35rem 0.75rem;border-radius:4px;font-weight:bold;cursor:pointer;font-size:12px;">Gerar resumo</button>`
                     const row = document.createElement('tr')
                     row.innerHTML = `
                         <td>${meeting.meetingTitle || meeting.title || 'Google Meet call'}</td>
@@ -232,9 +246,7 @@ function loadMeetings() {
                                 <button class="post-button" data-index="${i}" style="background:#6c757d;color:white;border:none;padding:0.35rem 0.5rem;border-radius:4px;cursor:pointer;font-size:12px;">
                                     ${meeting.webhookPostStatus === "new" ? "Post" : "Repost"}
                                 </button>
-                                <button data-generate data-index="${i}" style="background:#2A9ACA;color:white;border:none;padding:0.35rem 0.75rem;border-radius:4px;font-weight:bold;cursor:pointer;font-size:12px;">
-                                    Gerar resumo
-                                </button>
+                                ${actionBtnHtml}
                             </div>
                         </td>
                     `
@@ -337,6 +349,7 @@ function initializeAIFeatures() {
     const aiResponseDiv = document.querySelector("#ai-response")
     const copyResponseBtn = document.querySelector("#copy-response")
     const generatePdfBtn = document.querySelector("#generate-pdf")
+    const restoreDefaultsBtn = document.querySelector('#restore-default-templates')
 
     // Debug logging
     console.log("AI Features initialization:")
@@ -433,13 +446,8 @@ function initializeAIFeatures() {
         })
     }
 
-    // Quick prompts functionality
-    quickPromptBtns.forEach(btn => {
-        btn.addEventListener("click", function () {
-            const prompt = this.dataset.prompt
-            executePrompt(prompt)
-        })
-    })
+    // Quick prompts dinâmicos
+    setupDynamicQuickPrompts()
 
     // Custom prompt functionality
     if (executeCustomPromptBtn && customPromptInput) {
@@ -453,8 +461,9 @@ function initializeAIFeatures() {
         })
     }
 
-    // Copy response functionality
-    if (copyResponseBtn && aiResponseDiv) {
+    // Copy response functionality (guard contra múltiplos listeners)
+    if (copyResponseBtn && aiResponseDiv && !copyResponseBtn.dataset.listenerAdded) {
+        copyResponseBtn.dataset.listenerAdded = '1'
         copyResponseBtn.addEventListener("click", function () {
             const text = aiResponseDiv.textContent
             if (text && text !== "AI responses will appear here...") {
@@ -468,8 +477,9 @@ function initializeAIFeatures() {
         })
     }
 
-    // Generate PDF functionality
-    if (generatePdfBtn && aiResponseDiv) {
+    // Generate PDF functionality (guard contra múltiplos listeners)
+    if (generatePdfBtn && aiResponseDiv && !generatePdfBtn.dataset.listenerAdded) {
+        generatePdfBtn.dataset.listenerAdded = '1'
         generatePdfBtn.addEventListener("click", function () {
             const content = aiResponseDiv.textContent
             if (content && content !== "AI responses will appear here...") {
@@ -479,17 +489,249 @@ function initializeAIFeatures() {
             }
         })
     }
+
+    // Restaurar templates padrões
+    if (restoreDefaultsBtn && !restoreDefaultsBtn.hasAttribute('data-listener-added')) {
+        restoreDefaultsBtn.setAttribute('data-listener-added', 'true')
+        restoreDefaultsBtn.addEventListener('click', () => {
+            if (confirm('Restaurar os templates padrões? Isso substituirá a lista atual.')) {
+                restoreDefaultTemplates()
+            }
+        })
+    }
+}
+
+// ===== Quick Prompts Dinâmicos =====
+function getQuickActions(cb) {
+    chrome.storage.sync.get([QUICK_ACTIONS_KEY], (res) => {
+        let actions = res[QUICK_ACTIONS_KEY]
+        if (!Array.isArray(actions) || actions.length === 0) {
+            actions = DEFAULT_QUICK_ACTIONS
+            chrome.storage.sync.set({ [QUICK_ACTIONS_KEY]: actions }, () => cb(actions))
+        } else {
+            // migração leve para incluir icon
+            actions = actions.map(a => ({ icon: undefined, ...a }))
+            cb(actions)
+        }
+    })
+}
+
+function setQuickActions(actions, cb) {
+    chrome.storage.sync.set({ [QUICK_ACTIONS_KEY]: actions }, () => cb && cb())
+}
+
+function renderQuickPrompts(manageMode = false) {
+    const container = document.querySelector('#quick-prompts-container')
+    if (!container) return
+    getQuickActions((actions) => {
+        container.innerHTML = actions.map(a => `
+            <div class="qp-item" style="position:relative">
+          <button class="quick-prompt-btn" data-id="${a.id}" data-prompt="${a.prompt.replace(/&/g, '&amp;').replace(/\"/g, '&quot;')}">${a.icon ? `${a.icon} ` : ''}${a.label}</button>
+              ${manageMode ? `<button class="qp-del" data-id="${a.id}" title="Delete" style="position:absolute; top:-6px; right:-6px; width:22px; height:22px; border-radius:50%; border:1px solid #a0a0a0; background:transparent; color:#a0a0a0; cursor:pointer; font-size:12px; line-height:20px;">×</button>` : ''}
+            </div>
+        `).join('')
+    })
+}
+
+function setupDynamicQuickPrompts() {
+    // Render inicial
+    renderQuickPrompts(false)
+
+    // Delegação de eventos
+    const container = document.querySelector('#quick-prompts-container')
+    if (container && !container.getAttribute('data-delegate')) {
+        container.setAttribute('data-delegate', '1')
+        container.addEventListener('click', (e) => {
+            const target = /** @type {HTMLElement} */(e.target)
+            const del = target.closest('.qp-del')
+            if (del) {
+                const id = del.getAttribute('data-id')
+                if (!id) return
+                getQuickActions(actions => {
+                    const next = actions.filter(a => a.id !== id)
+                    setQuickActions(next, () => renderQuickPrompts(true))
+                })
+                return
+            }
+            const btn = target.closest('.quick-prompt-btn')
+            if (btn) {
+                const p = btn.getAttribute('data-prompt')
+                if (p) executePrompt(p)
+            }
+        })
+    }
+
+    // Manage toggle
+    let manage = false
+    const manageBtn = document.querySelector('#qp-manage')
+    manageBtn?.addEventListener('click', () => {
+        manage = !manage
+        manageBtn.textContent = manage ? 'Done' : 'Manage'
+        renderQuickPrompts(manage)
+    })
+
+    // Add new
+    const addBtn = document.querySelector('#qp-add')
+    addBtn?.addEventListener('click', () => {
+        const icon = prompt('Ícone (emoji opcional, ex.: 📌). Deixe em branco para nenhum ícone:') || ''
+        const label = prompt('Label:')
+        if (!label) return
+        const promptText = prompt('Prompt:')
+        if (!promptText) return
+        getQuickActions(actions => {
+            const id = 'qp_' + Math.random().toString(36).slice(2, 8)
+            const next = actions.concat([{ id, icon, label, prompt: promptText }])
+            setQuickActions(next, () => renderQuickPrompts(manage))
+        })
+    })
 }
 
 // Utilidades de migração/fallback dos templates
+function buildCustomDefaultTemplate() {
+    const content = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelo Padrão</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .timeline-item::before { content: ''; position: absolute; left: -2.75rem; top: 0; width: 2px; height: 100%; background-color: #cbd5e1; }
+        .timeline-item:first-child::before { top: 0.5rem; }
+        .timeline-item:last-child::before { height: 0.5rem; }
+        .timeline-icon { position: absolute; left: -3.5rem; top: 0.25rem; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; background-color: #4f46e5; color: white; z-index: 10; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4 sm:p-6 md:p-8">
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+        
+        <header class="bg-indigo-600 text-white p-6 md:p-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold">Desenvolvimento do Módulo de Movimentações</h1>
+                    <p class="text-indigo-200 mt-1">Data: 05 de Agosto de 2025</p>
+                </div>
+                <div class="text-4xl">
+                    <i class="fas fa-people-arrows"></i>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2">
+                
+                <section>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-tasks text-blue-500 mr-3"></i>
+                        Plano de Ação para o Novo Módulo
+                    </h2>
+                    <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-lg">
+                        <p class="text-gray-700">O objetivo é construir um módulo robusto para gerir todas as movimentações de pessoal (Lotação, Férias, Afastamento, Progressão, Averbação), começando pela <strong class="text-indigo-700">Lotação</strong>.</p>
+                    </div>
+                </section>
+
+                <section class="mt-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-shoe-prints text-green-500 mr-3"></i>
+                        Passos para o Desenvolvimento
+                    </h2>
+                    <div class="relative ml-10">
+                        
+                        <div class="timeline-item relative pb-8">
+                            <div class="timeline-icon"><i class="fas fa-database"></i></div>
+                            <h3 class="font-semibold text-gray-800">1. Modelagem das Tabelas</h3>
+                            <p class="text-sm text-gray-600 mb-2">Responsável: Luiz</p>
+                            <p class="text-gray-700 text-sm">Analisar as tabelas do sistema de RH atual, adaptar a estrutura para o padrão do PC Digital e modelar as novas tabelas em nosso banco de dados, começando pela Lotação.</p>
+                        </div>
+                        <div class="timeline-item relative pb-8">
+                            <div class="timeline-icon"><i class="fas fa-code"></i></div>
+                            <h3 class="font-semibold text-gray-800">2. Desenvolvimento do Backend</h3>
+                             <p class="text-sm text-gray-600 mb-2">Responsável: Equipa</p>
+                            <p class="text-gray-700 text-sm">Criar os \`controllers\` e \`services\` para a funcionalidade de Lotação, implementando toda a lógica de negócio necessária para as operações de CRUD (Criar, Ler, Atualizar, Apagar).</p>
+                        </div>
+                        <div class="timeline-item relative pb-8">
+                            <div class="timeline-icon"><i class="fas fa-palette"></i></div>
+                            <h3 class="font-semibold text-gray-800">3. Desenvolvimento do Frontend</h3>
+                             <p class="text-sm text-gray-600 mb-2">Responsáveis: Jéssica & Equipa</p>
+                             <p class="text-gray-700 text-sm">Com base no fluxo desenhado no Figma, desenvolver as telas de listagem e formulários (adição/edição) para cada tipo de movimentação, garantindo uma interface intuitiva.</p>
+                        </div>
+                         <div class="timeline-item relative pb-8">
+                            <div class="timeline-icon"><i class="fas fa-check-double"></i></div>
+                            <h3 class="font-semibold text-gray-800">4. Padronização e Validação</h3>
+                             <p class="text-sm text-gray-600 mb-2">Responsável: Eklebeson</p>
+                            <p class="text-gray-700 text-sm">Definir e padronizar os campos necessários para cada movimentação (ex: Nº Portaria, Data de Publicação) e garantir que o sistema valide as informações para manter a consistência dos dados.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            
+            <div class="lg:col-span-1 space-y-6">
+                
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h3 class="font-bold text-lg text-blue-800 mb-3">Tipos de Movimentação</h3>
+                    <ul class="list-disc list-inside text-blue-900 text-sm space-y-2">
+                        <li><i class="fas fa-map-marker-alt mr-2"></i>Lotação</li>
+                        <li><i class="fas fa-umbrella-beach mr-2"></i>Férias</li>
+                        <li><i class="fas fa-user-clock mr-2"></i>Afastamento</li>
+                        <li><i class="fas fa-chart-line mr-2"></i>Progressão</li>
+                        <li><i class="fas fa-file-signature mr-2"></i>Averbação</li>
+                        <li><i class="fas fa-user-tag mr-2"></i>Função</li>
+                    </ul>
+                </div>
+                
+                
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h3 class="font-bold text-lg text-yellow-800 mb-3 flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Pontos de Atenção
+                    </h3>
+                    <ul class="list-disc list-inside text-yellow-900 text-sm space-y-1">
+                        <li>Cada tipo de movimentação possui campos e regras de negócio distintas.</li>
+                        <li>Decidir se os dados serão migrados ou se o novo módulo será o ponto de partida.</li>
+                        <li>Garantir que a falta de publicação de portarias em Diário Oficial seja tratada pelo sistema.</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="font-bold text-lg text-green-800 mb-3">Próximos Passos</h3>
+                    <div class="text-left text-green-900 text-sm space-y-2">
+                       <p><i class="fas fa-chalkboard-teacher mr-2"></i>Jéssica apresentar o protótipo do Figma.</p>
+                       <p><i class="fas fa-database mr-2"></i>Luiz iniciar a modelagem da tabela de Lotação.</p>
+                       <p><i class="fas fa-users-cog mr-2"></i>Equipa definir os campos para cada movimentação.</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>`
+    return { id: 'modelo-padrao', name: 'Modelo padrão', content, createdAt: new Date().toISOString() }
+}
+
 async function loadAllTemplatesWithFallback() {
     return new Promise((resolve) => {
         // Buscar em local v2, local v1 e sync v1
-        const done = (arr) => resolve(arr || [])
+        const normalizeAndDone = (arr) => {
+            let list = Array.isArray(arr) ? arr.slice() : []
+            const removableNames = new Set(['Executive Summary', 'Meeting Minutes', 'Project Update', 'Teste'])
+            // Remover templates antigos automáticos, mas NÃO re-adicionar nada automaticamente
+            list = list.filter(t => !removableNames.has(t?.name))
+            // Persistir limpeza em V2 e V1 para evitar que voltem a aparecer
+            const saveObj = {}; saveObj[TEMPLATE_STORAGE_KEY] = list
+            safeStorageSet(saveObj, () => { })
+            chrome.storage.sync.set({ aiTemplates: list })
+            resolve(list)
+        }
         safeStorageGet([TEMPLATE_STORAGE_KEY, 'aiTemplates'], (localRes) => {
             const v2 = localRes[TEMPLATE_STORAGE_KEY]
             const v1Local = localRes['aiTemplates']
-            if (v2 && Array.isArray(v2) && v2.length) return done(v2)
+            if (v2 && Array.isArray(v2) && v2.length) return normalizeAndDone(v2)
             // tentar sync.v1
             chrome.storage.sync.get(['aiTemplates'], (syncRes) => {
                 const v1Sync = syncRes && Array.isArray(syncRes.aiTemplates) ? syncRes.aiTemplates : []
@@ -497,11 +739,23 @@ async function loadAllTemplatesWithFallback() {
                 // Migrar se houver algo
                 if (merged.length) {
                     const saveObj = {}; saveObj[TEMPLATE_STORAGE_KEY] = merged
-                    safeStorageSet(saveObj, () => done(merged))
+                    safeStorageSet(saveObj, () => normalizeAndDone(merged))
                 } else {
-                    done([])
+                    normalizeAndDone([])
                 }
             })
+        })
+    })
+}
+
+// Restaura os templates padrões (apenas o template customizado atual)
+function restoreDefaultTemplates() {
+    const onlyCustom = [buildCustomDefaultTemplate()]
+    const saveObj = {}; saveObj[TEMPLATE_STORAGE_KEY] = onlyCustom
+    safeStorageSet(saveObj, () => {
+        chrome.storage.sync.set({ aiTemplates: onlyCustom }, () => {
+            loadTemplates()
+            alert('Templates padrão restaurados.')
         })
     })
 }
@@ -566,7 +820,6 @@ function useTemplate(templateId) {
                 }
                 const prompt = `Usando este template: ${template.content}\n\nPor favor, gere um resumo usando os seguintes dados da reunião:\nTítulo da Reunião: ${meetingData.title}\nData: ${meetingData.date}\nParticipantes: ${meetingData.participants}\nTranscrição: ${meetingData.transcript}\n\nSubstitua os placeholders {{summary}}, {{date}}, {{participants}}.`
                 executePrompt(prompt)
-                window.scrollTo({ top: aiResponseDiv.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' })
             })
         })
     })
@@ -609,6 +862,13 @@ function openTemplatePickerAndGenerate(meetingIndex) {
 
             const selected = templates[idx]
             aiResponseDiv.textContent = 'Gerando resumo…'
+            // estado de carregamento no botão da linha
+            const rowBtn = document.querySelector(`[data-generate][data-index="${meetingIndex}"]`)
+            if (rowBtn instanceof HTMLButtonElement) {
+                rowBtn.disabled = true
+                rowBtn.textContent = 'Gerando…'
+            }
+            currentGeneratingMeetingIndex = meetingIndex
 
             // Obter dados específicos da reunião pelo índice
             chrome.storage.local.get(['meetings'], function (resultLocal) {
@@ -657,7 +917,6 @@ INSTRUÇÕES:
 7. Retorne apenas o HTML final processado, sem explicações adicionais`
 
                 executePrompt(prompt)
-                window.scrollTo({ top: aiResponseDiv.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' })
             })
         })
     })
@@ -678,10 +937,28 @@ function enhanceMeetingsListUI() {
     // Delegação de eventos para gerar resumo com template selecionado
     table.addEventListener('click', (e) => {
         const target = /** @type {HTMLElement} */(e.target)
-        const btn = target.closest('[data-generate]')
-        if (!btn) return
-        const meetingIndex = btn.getAttribute('data-index')
-        openTemplatePickerAndGenerate(Number(meetingIndex))
+        const genBtn = target.closest('[data-generate]')
+        if (genBtn) {
+            const meetingIndex = Number(genBtn.getAttribute('data-index'))
+            if (genBtn instanceof HTMLButtonElement) {
+                genBtn.disabled = true
+                genBtn.textContent = 'Gerando…'
+            }
+            openTemplatePickerAndGenerate(meetingIndex)
+            return
+        }
+        const dlBtn = target.closest('[data-download-pdf]')
+        if (dlBtn) {
+            const idx = Number(dlBtn.getAttribute('data-index'))
+            chrome.storage.local.get(['meetings'], (res) => {
+                const arr = res.meetings || []
+                if (idx < 0 || idx >= arr.length) return
+                const meeting = arr[idx]
+                const html = meeting.aiSummaryHtml
+                if (html) generatePDF(String(html))
+            })
+            return
+        }
     })
 }
 
@@ -779,129 +1056,178 @@ async function executePrompt(prompt) {
             const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "Nenhuma resposta gerada"
             aiResponseDiv.textContent = aiResponse
 
+            // Se veio da lista, persistir e atualizar botões
+            if (currentGeneratingMeetingIndex !== null) {
+                const idx = Number(currentGeneratingMeetingIndex)
+                chrome.storage.local.get(['meetings'], (res) => {
+                    const arr = res.meetings || []
+                    if (idx >= 0 && idx < arr.length) {
+                        arr[idx].aiSummaryHtml = aiResponse
+                        chrome.storage.local.set({ meetings: arr }, () => {
+                            currentGeneratingMeetingIndex = null
+                            loadMeetings()
+                        })
+                    } else {
+                        currentGeneratingMeetingIndex = null
+                    }
+                })
+            }
+
         } catch (error) {
             console.error("Falha na solicitação à IA:", error)
             aiResponseDiv.textContent = `Erro: ${error.message}`
         } finally {
             if (executeBtn) executeBtn.disabled = false
+            if (currentGeneratingMeetingIndex !== null) {
+                const rowBtn = document.querySelector(`[data-generate][data-index="${currentGeneratingMeetingIndex}"]`)
+                if (rowBtn instanceof HTMLButtonElement) {
+                    rowBtn.disabled = false
+                    rowBtn.textContent = 'Gerar resumo'
+                }
+            }
         }
     })
 }
 
+// Impressão via iframe oculto (fallback que usa a caixa de diálogo do navegador)
+function printHtmlViaIframe(htmlContent) {
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    iframe.setAttribute('aria-hidden', 'true')
+    document.body.appendChild(iframe)
+
+    const cleanup = () => {
+        try { window.removeEventListener('afterprint', cleanup) } catch { }
+        try { iframe.parentNode && iframe.parentNode.removeChild(iframe) } catch { }
+    }
+
+    const triggerPrint = () => {
+        const win = iframe.contentWindow
+        if (!win) { cleanup(); return }
+        try { window.addEventListener('afterprint', cleanup) } catch { }
+        setTimeout(() => { try { win.focus(); win.print() } catch { } }, 50)
+        setTimeout(cleanup, 3000)
+    }
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    if (doc) {
+        doc.open()
+        doc.write(htmlContent)
+        doc.close()
+        if (doc.readyState === 'complete') triggerPrint()
+        else iframe.onload = triggerPrint
+    } else {
+        cleanup()
+        alert('Não foi possível preparar a impressão.')
+    }
+}
+
 async function generatePDF(content) {
     try {
-        // Limpar marcadores de código como ```html do conteúdo
+        // 1) Limpeza de cercas de código
         let cleanContent = content
             .replace(/```html\s*/g, '')
             .replace(/```\s*/g, '')
             .trim()
 
-        // Verificar se o conteúdo já é HTML ou se é texto simples
         const isHtmlContent = cleanContent.trim().startsWith('<') || cleanContent.includes('<html')
 
-        let htmlContent
-        if (isHtmlContent) {
-            // Se já é HTML, usar diretamente mas adicionar estilos de impressão
-            htmlContent = cleanContent.includes('</head>')
-                ? cleanContent.replace(
-                    '</head>',
-                    `<style>
-                        @media print {
-                            body { margin: 0; padding: 20px; }
-                            .no-print { display: none !important; }
-                        }
-                        @page { 
-                            margin: 1cm; 
-                            size: A4; 
-                        }
-                        body {
-                            font-family: Arial, sans-serif;
-                            line-height: 1.6;
-                            color: #333;
-                            background: white;
-                        }
-                    </style>
-                    </head>`
-                )
-                : `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-                    @page { margin: 1cm; size: A4; }
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background: white; margin: 0; padding: 20px; }
-                </style></head><body>${cleanContent}</body></html>`
-        } else {
-            // Se é texto simples, criar HTML estruturado
-            htmlContent = `
-                <!DOCTYPE html>
-                <html lang="pt-BR">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Resumo da Reunião - TranscripTonic</title>
-                    <style>
-                        body { 
-                            font-family: Arial, sans-serif; 
-                            line-height: 1.6; 
-                            margin: 0;
-                            padding: 20px;
-                            color: #333;
-                            background: white;
-                        }
-                        h1 { 
-                            color: #2A9ACA; 
-                            border-bottom: 2px solid #2A9ACA;
-                            padding-bottom: 10px;
-                            margin-bottom: 20px;
-                        }
-                        .header { 
-                            border-bottom: 2px solid #2A9ACA; 
-                            padding-bottom: 10px; 
-                            margin-bottom: 20px; 
-                        }
-                        .content { 
-                            white-space: pre-wrap; 
-                            background: #f9f9f9;
-                            padding: 15px;
-                            border-radius: 5px;
-                            border-left: 4px solid #2A9ACA;
-                        }
-                        @page { 
-                            margin: 1cm; 
-                            size: A4; 
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Resumo da Reunião</h1>
-                        <p><strong>Gerado pelo TranscripTonic em:</strong> ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
-                    </div>
+        // 2) Tentar PDF direto (sem cabeçalho/rodapé do navegador)
+        if (typeof window !== 'undefined' && typeof window.html2pdf !== 'undefined') {
+            // Wrapper branco com largura A4; sem margens externas do PDF
+            const wrapper = document.createElement('div')
+            wrapper.style.background = '#ffffff'
+            wrapper.style.color = '#000000'
+            wrapper.style.width = '210mm'
+            wrapper.style.minHeight = '297mm'
+            wrapper.style.boxSizing = 'border-box'
+            // Padding interno agradável; não é cabeçalho/rodapé do navegador
+            wrapper.style.padding = '12mm'
+            wrapper.style.fontFamily = 'Arial, sans-serif'
+            wrapper.style.lineHeight = '1.45'
+
+            // Estilos básicos opcionais
+            const baseStyles = `
+                <style>
+                    h1 { color:#2A9ACA; border-bottom:2px solid #2A9ACA; padding-bottom:8px; margin-top:0; }
+                    .content { white-space: pre-wrap; background:#f6f8fa; padding:12px; border-radius:5px; border-left:4px solid #2A9ACA; }
+                </style>`
+
+            if (isHtmlContent) {
+                // Evitar html/head/body aninhados; usar apenas o inner do usuário
+                // Remove <html> e <body> se existirem
+                const bodyMatch = cleanContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i)
+                const inner = bodyMatch ? bodyMatch[1] : cleanContent
+                wrapper.innerHTML = baseStyles + inner
+            } else {
+                const generated = `
+                    ${baseStyles}
+                    <h1>Resumo da Reunião</h1>
+                    <p><strong>Gerado em:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
                     <div class="content">${escapeHtml(cleanContent)}</div>
-                </body>
-                </html>
-            `
+                `
+                wrapper.innerHTML = generated
+            }
+
+            // Inserir temporariamente no DOM para renderização
+            wrapper.style.position = 'fixed'
+            wrapper.style.left = '-10000px'
+            document.body.appendChild(wrapper)
+
+            const filenameId = Math.random().toString(36).slice(2, 8)
+            const opt = {
+                margin: [0, 0, 0, 0],
+                filename: `Resumo da Reunião - ${filenameId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+                pagebreak: { mode: ['css', 'legacy'] }
+            }
+
+            try {
+                await window.html2pdf().set(opt).from(wrapper).save()
+                // Remover wrapper após salvar
+                try { wrapper.remove() } catch { }
+                return
+            } catch (genErr) {
+                console.warn('Falha na geração direta de PDF, caindo para impressão:', genErr)
+                try { wrapper.remove() } catch { }
+                // Continua para fallback de impressão
+            }
         }
 
-        // Criar um blob do HTML e usar download direto
-        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
+        // 3) Fallback: imprimir via iframe (poderá exibir cabeçalho/rodapé do navegador)
+        const baseHead = `
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Resumo da Reunião - TranscripTonic</title>
+            <style>
+                @page { size: A4; margin: 0; }
+                body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin:0; padding:20px; }
+                h1 { color:#2A9ACA; border-bottom:2px solid #2A9ACA; padding-bottom:10px; }
+                .content { white-space: pre-wrap; background:#f9f9f9; padding:15px; border-radius:5px; border-left:4px solid #2A9ACA; }
+                .no-print { display:none !important; }
+            </style>`
 
-        // Criar um link de download temporário
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `resumo-reuniao-${new Date().toISOString().split('T')[0]}.html`
-        a.style.display = 'none'
+        const htmlContent = isHtmlContent
+            ? (cleanContent.includes('</head>')
+                ? cleanContent.replace('</head>', `${baseHead}</head>`)
+                : `<!DOCTYPE html><html><head>${baseHead}</head><body>${cleanContent}</body></html>`)
+            : `<!DOCTYPE html><html lang="pt-BR"><head>${baseHead}</head><body>
+                <h1>Resumo da Reunião</h1>
+                <p><strong>Gerado em:</strong> ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
+                <div class="content">${escapeHtml(cleanContent)}</div>
+            </body></html>`
 
-        // Adicionar ao DOM, clicar e remover
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-
-        // Limpar a URL do blob
-        setTimeout(() => {
-            URL.revokeObjectURL(url)
-        }, 1000)
+        printHtmlViaIframe(htmlContent)
 
     } catch (error) {
         console.error('Erro ao gerar PDF:', error)
-        alert('Erro ao gerar arquivo. Tente novamente.')
+        alert('Erro ao gerar PDF. Tente novamente.')
     }
 }
